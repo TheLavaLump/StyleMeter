@@ -1,0 +1,20 @@
+{
+	"Name": "LavaLump Style Meter",
+	"Description": "Adds an Ultrakill-like style meter to the Hud",
+	"LoadPriority": 2,
+	"RequiredOnClient": false,
+	"Version": "1.0.2",
+
+	"Scripts": [
+		{
+			"Path": "StyleMeterMain.nut",
+			"RunOn": "CLIENT",
+			"ClientCallback": {
+				"After": "StyleMeterInit"
+			}
+		}
+
+	],
+	"ConVars": [
+	]
+}
