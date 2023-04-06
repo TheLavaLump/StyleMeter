@@ -4,8 +4,8 @@ Gain 'style' by getting kills and dealing damage, extra style is given by 17 sty
 
 **v1.1.0 Changes:**
 
-Added an event for killing non-player enimies
-Changes to code
+Added an event for killing non-player enimies.
+Changes to code.
 Events for movement, speed and Air time, courtesy of [Khalmee](https://northstar.thunderstore.io/package/Khalmee/)
 
 <hr>
