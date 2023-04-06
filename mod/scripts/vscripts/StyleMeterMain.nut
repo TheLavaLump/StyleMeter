@@ -18,12 +18,16 @@ var topology = null
 
 void function StyleMeterInit()
 {
-	topology = RuiTopology_CreateSphere(COCKPIT_RUI_OFFSET - <0, 82, -21>, <0, -1, 0.037>, <0, 0.00, -1>, COCKPIT_RUI_RADIUS, COCKPIT_RUI_WIDTH * 0.15, COCKPIT_RUI_HEIGHT * 0.003, 3.5)
+	topology = RuiTopology_CreateSphere(COCKPIT_RUI_OFFSET - <0, 82, -21>, <0, -1, 0.037>, <0, 0.00, -1>, COCKPIT_RUI_RADIUS, COCKPIT_RUI_WIDTH * 0.15, COCKPIT_RUI_HEIGHT * 0.003, COCKPIT_RUI_SUBDIV)
 	entity player = GetLocalClientPlayer()
 	AddLocalPlayerDidDamageCallback(OnDamage)
 	PercentageBarTopo = topology	
 	AddCallback_OnPlayerKilled(KillEvent)
 	StyleRuiSetup()
+	thread UpdateRankUI()
+	TimeSinceLast = Time()
+}
+
 	//Khalmee's stuff
 	/*
 	//This was an attempt to make a background for the meter, but after realizing how big it is i dropped the idea. Experiment with that as you will.
@@ -33,16 +37,15 @@ void function StyleMeterInit()
     RuiSetFloat(moreCringe, "basicImageAlpha", 0.5)
 	*/
 	//end
-	thread UpdateRankUI()
-	TimeSinceLast = Time()
-}
+	
+array < string > SlotStrings = ["", "", "", "", ""]
+array < vector > SlotCols = [<0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>]
+array < float > StyleRanks = [0.0, 0.01, 2.0, 4.0, 6.0, 8.0, 10.0]
+array < string > StyleRankStrings = ["", ""]
 
-bool OnCooldown = false
-float damadgeAmount = 0.0
 float StyleBarWidth = 0.15
 int StyleStreak = 0
 int Multikill = 0
-string mostRecentModifier = ""
 bool Slot1Full = false
 int PlayerStreak = 0
 #if CLIENT
@@ -50,39 +53,17 @@ float TimeSinceLast = 0
 float TimeNow = 0
 float StylePoints = 0.0
 float StyleEventAlpha = 1.0
-float Nrank = 0.0
-float Drank = 0.01
-float Crank = 2.0
-float Brank = 4.0
-float Arank = 6.0
-float Srank = 8.0
-float Prank = 10.0
 float StylePosX1 = 0.8
 float StylePosY1 = 0.2
-string Slot1 = ""
-string Slot2 = ""
-string Slot3 = ""
-string Slot4 = ""
-string Slot5 = ""
-vector Slot1Col = <0.5, 0.5, 0.5>
-vector Slot2Col = <0.5, 0.5, 0.5>
-vector Slot3Col = <0.5, 0.5, 0.5>
-vector Slot4Col = <0.5, 0.5, 0.5>
-vector Slot5Col = <0.5, 0.5, 0.5>
-string StyleRank1 = ""
-string StyleRank2 = ""
 vector StyleCol1 = <1.0, 1.0, 1.0>
 vector StyleCol2 = <1.0, 1.0, 1.0>
 vector PercentageCol = <1.0, 1.0, 1.0>
-float StylePosX2 = (0.9 + 0.02)
-float StylePosY2 = (0.2 + 0.03)
+vector StylePos1 = < 0.8, 0.2, 0>
+vector StylePos2 = <0.92, 0.23, 0>
 float StyleScale2 = 50.0
 float StylePointPercenage = 0.0
 
-vector Rareity1 = <0.5, 0.5, 0.5>
-vector Rareity2 = <1.0, 1.0, 1.0>
-vector Rareity3 = <0.0, 1.0, 1.0>
-vector Rareity4 = <1.0, 0.0, 0.0>
+array < vector > Rareity = [<0.5, 0.5, 0.5>, <1.0, 1.0, 1.0>, <0.0, 1.0, 1.0>, <1.0, 0.0, 0.0>]
 
 void function KillEvent( entity victim, entity attacker, int damageSourceId ){
 	entity player = GetLocalClientPlayer()
@@ -92,56 +73,56 @@ void function KillEvent( entity victim, entity attacker, int damageSourceId ){
 			StyleStreak++
 			Multikill++
 			if(victim.IsTitan()){
-				AddStyleEvent( "titan kill", 5.0, Rareity2 )
+				AddStyleEvent( "titan kill", 5.0, Rareity[1] )
 				if (damageSourceId == 185){
-					AddStyleEvent( "Termination", 0.2, Rareity3 ) //Titan execution
+					AddStyleEvent( "Termination", 0.2, Rareity[2] ) //Titan execution
 				}
 			}
 			if (Multikill > 1){
-				AddStyleEvent( "Multikill X" + Multikill, 1.0, Rareity3 ) // Multikills 
+				AddStyleEvent( "Multikill X" + Multikill, 1.0, Rareity[2] ) // Multikills 
 			}
 			if (StyleStreak == 3 ){
-				AddStyleEvent( "Streak", 1.0, Rareity2 ) //Killstreaks
+				AddStyleEvent( "Streak", 1.0, Rareity[1] ) //Killstreaks
 			}
 			else if (StyleStreak == 6){
-				AddStyleEvent( "Great Streak", 1.0, Rareity3 )							
+				AddStyleEvent( "Great Streak", 1.0, Rareity[2] )							
 			}
 			else if (StyleStreak == 10){
-				AddStyleEvent( "Untouchable", 1.0, Rareity4 )				
+				AddStyleEvent( "Untouchable", 1.0, Rareity[3] )				
 			}
 			if(damageSourceId == 110 || damageSourceId == 75 || damageSourceId == 237 || damageSourceId == 40 || damageSourceId == 57 || damageSourceId == 81 ){
-				AddStyleEvent( "Incineration", 0.5, Rareity1 ) //Firestar + all of scorches abilities (hopefully)
+				AddStyleEvent( "Incineration", 0.5, Rareity[0] ) //Firestar + all of scorches abilities (hopefully)
 			}
 			else if(!victim.IsTitan()){
-				AddStyleEvent( "pilot kill", 2.0, Rareity2 )
+				AddStyleEvent( "pilot kill", 2.0, Rareity[1] )
 				if ( damageSourceId == 126 || damageSourceId ==  135 || damageSourceId ==  119 )
 				{
-					AddStyleEvent( "Obliterated", 0.2, Rareity1 ) // Cold war, Epg, Charge rifle
+					AddStyleEvent( "Obliterated", 0.2, Rareity[0] ) // Cold war, Epg, Charge rifle
 				}
 				else if (damageSourceId == 140){
-					AddStyleEvent( "Disrespect", 0.2, Rareity1 ) // Pilot melee
+					AddStyleEvent( "Disrespect", 0.2, Rareity[0] ) // Pilot melee
 				}
 				else if (damageSourceId == 186){
-					AddStyleEvent( "Execution", 3.0, Rareity3 ) //Pilot execution
+					AddStyleEvent( "Execution", 3.0, Rareity[2] ) //Pilot execution
 				}
 				else if (damageSourceId == 45){
-					AddStyleEvent( "Railcannoned", 0.2, Rareity1 ) // Railgun
+					AddStyleEvent( "Railcannoned", 0.2, Rareity[0] ) // Railgun
 				}
 				else if (damageSourceId == 111){
-					AddStyleEvent( "Bankrupt", 3.0, Rareity3) //Pulse blade
+					AddStyleEvent( "Bankrupt", 3.0, Rareity[2]) //Pulse blade
 				}
 				}
 				else if (damageSourceId == 85){
-					AddStyleEvent( "Why are you even using this", 0.1, Rareity1) //Electric smoke nades
+					AddStyleEvent( "Why are you even using this", 0.1, Rareity[0]) //Electric smoke nades
 				}
 				else if (damageSourceId == 151){
-					AddStyleEvent( "sliced", 0.2, Rareity1 ) //Ronin melee
+					AddStyleEvent( "sliced", 0.2, Rareity[0] ) //Ronin melee
 				}
 			if (damageSourceId == 44){
-				AddStyleEvent( "Nuke", 4.0, Rareity3 )//Nukelear eject
+				AddStyleEvent( "Nuke", 4.0, Rareity[2] )//Nukelear eject
 			}
 			if(victim.IsTitan() && !player.IsTitan()){
-				AddStyleEvent( "takedown", 2.0, Rareity4 ) //Titan kill as pilot
+				AddStyleEvent( "takedown", 2.0, Rareity[3] ) //Titan kill as pilot
 			}
 		}
 	}
@@ -151,30 +132,35 @@ void function AddStyleFromDmg( float num ){
 	StylePoints += num
 }
 
-void function OnDamage( entity player, entity victim, vector Pos, int DamageType ){
+void function OnDamage( entity player, entity victim, vector Pos, int damageType){
 	AddStyleFromDmg(0.1)
+	if(damageType & DF_KILLSHOT){
+		if(!victim.IsPlayer()){	
+			AddStyleEvent( "kill", 0.4, Rareity[0]) // Ai kills
+		}
+	}
 }
 
 void function AddStyleEvent( string name, float amount, vector rarity ){
 	StylePoints = StylePoints + amount
 	if (Slot1Full == false){
-		Slot1 = ("+" + name)
-		Slot1Col = rarity
+		SlotStrings[0] = ("+" + name)
+		SlotCols[0] = rarity
 		Slot1Full = true
 		StyleEventAlpha = 1.0
 		TimeSinceLast = Time()
 	}
 	else {	//A really bad way to move the events down one slot if Slot1 is full
-		Slot5 = Slot4
-		Slot5Col = Slot4Col
-		Slot4 = Slot3
-		Slot4Col = Slot3Col
-		Slot3 = Slot2
-		Slot3Col = Slot2Col
-		Slot2 = Slot1
-		Slot2Col = Slot1Col
-		Slot1 = ("+" + name)
-		Slot1Col = rarity
+		SlotStrings[4] = SlotStrings[3]
+		SlotCols[4] = SlotCols[3]
+		SlotStrings[3] = SlotStrings[2]
+		SlotCols[3] = SlotCols[2]
+		SlotStrings[2] = SlotStrings[1]
+		SlotCols[2] = SlotCols[1]
+		SlotStrings[1] = SlotStrings[0]
+		SlotCols[1] = SlotCols[0]
+		SlotStrings[0] = ("+" + name)
+		SlotCols[0] = rarity
 		TimeSinceLast = Time()
 		StyleEventAlpha = 1.0
 	}
@@ -184,7 +170,7 @@ void function AddStyleEvent( string name, float amount, vector rarity ){
 void function UpdateRankUI(){
 	while(true){
 		TimeNow = Time()
-		
+		StyleScale2 = 50.0
 		//Khalmee's
 		//Functions adding speed and air time bonuses encased in an IF containing various edge cases.
 		//For now I'm turning Air time gain off, since it has problems with match intro and dropping titans, besides that it works fine but I'm not satisfied.
@@ -193,86 +179,79 @@ void function UpdateRankUI(){
 			//AddStyleFromAirTime()
 		}
 		//end
-		
-		StylePosX2 = StylePosX1 + 0.02
-		StylePosY2 = StylePosY1 + 0.03
-		StyleScale2 = 50.0
-		if (StylePoints == Nrank){
-			StyleRank1 = ""
-			StyleRank2 = ""
+		if (StylePoints == StyleRanks[0]){
+			StyleRankStrings = ["", ""]
 			StyleCol1 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.8, 0.2, 0>
 		}
-		if (StylePoints > Drank){
-			StyleRank1 = "D"
-			StyleRank2 = "estructive"
+		if (StylePoints > StyleRanks[1]){
+			StyleRankStrings = ["D", "structive"]
 			StyleCol1 = <0.0, 0.58039215686, 1.0>
-			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.82, 0.23, 0>
 		}
-		if (StylePoints > Crank){
-			StyleRank1 = "C"
-			StyleRank2 = "haotic"
+		if (StylePoints > StyleRanks[2]){
+			StyleRankStrings = ["C", "haotic"]
 			StyleCol1 = <0.31372549019, 0.98823529411, 0.0156862745>
 			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.82, 0.23, 0>
 		}
-		if (StylePoints > Brank){
-			StyleRank1 = "B"
-			StyleRank2 = "rutal"
+		if (StylePoints > StyleRanks[3]){
+			StyleRankStrings = ["B", "rutal"]
 			StyleCol1 = <0.98823529411, 0.83137254902, 0.0156862745>
 			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.82, 0.23, 0>
 		}
-		if (StylePoints > Arank){
-			StyleRank1 = "A"
-			StyleRank2 = "narchic"
+		if (StylePoints > StyleRanks[4]){
+			StyleRankStrings = ["A", "narchic"]
 			StyleCol1 = <1.0, 0.42352941176, 0.0156862745>
 			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.82, 0.23, 0>
 		}
-		if (StylePoints > Srank){
-			StyleRank1 = "S"
-			StyleRank2 = "upreme"
+		if (StylePoints > StyleRanks[5]){
+			StyleRankStrings = ["S", "upreme"]
 			StyleCol1 = <1.0, 0.0156862745, 0.0156862745>
 			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.82, 0.23, 0>
 		}
-		if (StylePoints > Prank){
-			StyleRank1 = "ULTRAFALL"
-			StyleRank2 = "ULTRAFALL"
+		if (StylePoints > StyleRanks[6]){
+			StyleRankStrings = ["ULTRAFALL", "ULTRAFALL"]
 			StyleCol1 = <1.0, 0.8431372549, 0.0>
 			StyleCol2 = <1.0, 0.4431372549, 0.0>
 			StyleScale2 = 70.0
-			StylePosX2 = StylePosX1 + 0.002
-			StylePosY2 = StylePosY1 + 0.002
-		}
+			StylePos2 += <0.002, 0.002, 0>
+			}
 		//Refresh the Rui of the style meter
-		RuiSetFloat2(StyleEventSlot1, "msgPos", <StylePosX1, StylePosY1 + 0.10, 0>)
+		RuiSetFloat2(StyleEventSlot1, "msgPos", StylePos1 + <0, 0.10, 0>)
 		RuiSetFloat(StyleEventSlot1, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot1, "msgColor", Slot1Col)
-		RuiSetString(StyleEventSlot1, "msgText", Slot1)
-	
-		RuiSetFloat2(StyleEventSlot2, "msgPos", <StylePosX1, StylePosY1 + 0.13, 0>)
+		RuiSetFloat3(StyleEventSlot1, "msgColor", SlotCols[0])
+		RuiSetString(StyleEventSlot1, "msgText", SlotStrings[0])
+
+		RuiSetFloat2(StyleEventSlot2, "msgPos", StylePos1 + <0, 0.13, 0>)
 		RuiSetFloat(StyleEventSlot2, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot2, "msgColor", Slot2Col)
-		RuiSetString(StyleEventSlot2, "msgText", Slot2)
+		RuiSetFloat3(StyleEventSlot2, "msgColor", SlotCols[1])
+		RuiSetString(StyleEventSlot2, "msgText", SlotStrings[1])
 	
-		RuiSetFloat2(StyleEventSlot3, "msgPos", <StylePosX1, StylePosY1 + 0.16, 0>)
+		RuiSetFloat2(StyleEventSlot3, "msgPos", StylePos1 + <0, 0.16, 0>)
 		RuiSetFloat(StyleEventSlot3, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot3, "msgColor", Slot3Col)
-		RuiSetString(StyleEventSlot3, "msgText", Slot3)
+		RuiSetFloat3(StyleEventSlot3, "msgColor", SlotCols[2])
+		RuiSetString(StyleEventSlot3, "msgText", SlotStrings[2])
 	
-		RuiSetFloat2(StyleEventSlot4, "msgPos", <StylePosX1, StylePosY1 + 0.19, 0>)
+		RuiSetFloat2(StyleEventSlot4, "msgPos", StylePos1 + <0, 0.19, 0>)
 		RuiSetFloat(StyleEventSlot4, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot4, "msgColor", Slot4Col)
-		RuiSetString(StyleEventSlot4, "msgText", Slot4)
+		RuiSetFloat3(StyleEventSlot4, "msgColor", SlotCols[3])
+		RuiSetString(StyleEventSlot4, "msgText", SlotStrings[3])
 		
-		RuiSetFloat2(StyleEventSlot5, "msgPos", <StylePosX1, StylePosY1 + 0.22, 0>)
+		RuiSetFloat2(StyleEventSlot5, "msgPos", StylePos1 + <0, 0.22, 0>)
 		RuiSetFloat(StyleEventSlot5, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot5, "msgColor", Slot5Col)
-		RuiSetString(StyleEventSlot5, "msgText", Slot5)
+		RuiSetFloat3(StyleEventSlot5, "msgColor", SlotCols[4])
+		RuiSetString(StyleEventSlot5, "msgText", SlotStrings[4])
 			
-		RuiSetFloat2(StyleRankRui2, "msgPos", <StylePosX2, StylePosY2, 0>)
+		RuiSetFloat2(StyleRankRui2, "msgPos", StylePos2)
 		RuiSetFloat(StyleRankRui2, "msgFontSize", StyleScale2)
 		RuiSetFloat3(StyleRankRui2, "msgColor", StyleCol2)
 		RuiSetFloat3(StyleRankRui1, "msgColor", StyleCol1)
-		RuiSetString(StyleRankRui2, "msgText", StyleRank2)
-		RuiSetString(StyleRankRui1, "msgText", StyleRank1)
+		RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
+		RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
 		
 		if (StylePoints >= 12){ //Style point cap
 			StylePoints = 12
@@ -282,11 +261,11 @@ void function UpdateRankUI(){
 		if(((TimeNow - TimeSinceLast) > 5)){
 			StyleEventAlpha = StyleEventAlpha - 0.01
 			if((TimeNow - TimeSinceLast) > 7){
-				Slot1 = ""
-				Slot2 = ""
-				Slot3 = ""
-				Slot4 = ""
-				Slot4 = ""
+				SlotStrings[0] = ""
+				SlotStrings[1] = ""
+				SlotStrings[2] = ""
+				SlotStrings[3] = ""
+				SlotStrings[4] = ""
 				Multikill = 0
 			}
 		}
@@ -335,21 +314,21 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	//Style rank Segment 1
 	RuiSetInt(StyleRankRui1, "maxLines", 1)
 	RuiSetInt(StyleRankRui1, "lineNum", 1)	
-	RuiSetFloat2(StyleRankRui1, "msgPos", <StylePosX1, StylePosY1, 0>)
+	RuiSetFloat2(StyleRankRui1, "msgPos", StylePos1)
 	RuiSetFloat(StyleRankRui1, "msgFontSize", 70.0)
 	RuiSetFloat(StyleRankRui1, "msgAlpha", 1.0)	
 	RuiSetFloat(StyleRankRui1, "thicken", 0.0)
 	RuiSetFloat3(StyleRankRui1, "msgColor", StyleCol1)
-	RuiSetString(StyleRankRui1, "msgText", StyleRank1)
+	RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
 	//Style rank Segment 2	
 	RuiSetInt(StyleRankRui2, "maxLines", 1)
 	RuiSetInt(StyleRankRui2, "lineNum", 1)
-	RuiSetFloat2(StyleRankRui2, "msgPos", <StylePosX2, StylePosY2, 0>)
+	RuiSetFloat2(StyleRankRui2, "msgPos", StylePos2)
 	RuiSetFloat(StyleRankRui2, "msgFontSize", StyleScale2)
 	RuiSetFloat(StyleRankRui2, "msgAlpha", 1.0)
 	RuiSetFloat(StyleRankRui2, "thicken", 0.0)	
 	RuiSetFloat3(StyleRankRui2, "msgColor", StyleCol2)
-	RuiSetString(StyleRankRui2, "msgText", StyleRank2)
+	RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
 
 	//Slot 1
 	RuiSetInt(StyleEventSlot1, "maxLines", 1)
@@ -358,8 +337,8 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot1, "msgFontSize", 50.0)
 	RuiSetFloat(StyleEventSlot1, "msgAlpha", StyleEventAlpha)
 	RuiSetFloat(StyleEventSlot1, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot1, "msgColor", <0.5, 0.5, 0.5>)
-	RuiSetString(StyleEventSlot1, "msgText", Slot1)
+	RuiSetFloat3(StyleEventSlot1, "msgColor", SlotCols[0])
+	RuiSetString(StyleEventSlot1, "msgText", SlotStrings[0])
 	//Slot 2
 	RuiSetInt(StyleEventSlot2, "maxLines", 1)
 	RuiSetInt(StyleEventSlot2, "lineNum", 1)
@@ -367,8 +346,8 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot2, "msgFontSize", 50.0)
 	RuiSetFloat(StyleEventSlot2, "msgAlpha", StyleEventAlpha)
 	RuiSetFloat(StyleEventSlot2, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot2, "msgColor", <0.5, 0.5, 0.5>)
-	RuiSetString(StyleEventSlot2, "msgText", Slot2)
+	RuiSetFloat3(StyleEventSlot2, "msgColor", SlotCols[1])
+	RuiSetString(StyleEventSlot2, "msgText", SlotStrings[1])
 	//Slot 3	
 	RuiSetInt(StyleEventSlot3, "maxLines", 1)
 	RuiSetInt(StyleEventSlot3, "lineNum", 1)
@@ -376,8 +355,8 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot3, "msgFontSize", 50.0)
 	RuiSetFloat(StyleEventSlot3, "msgAlpha", StyleEventAlpha)
 	RuiSetFloat(StyleEventSlot3, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot3, "msgColor", <0.5, 0.5, 0.5>)
-	RuiSetString(StyleEventSlot3, "msgText", Slot3)
+	RuiSetFloat3(StyleEventSlot3, "msgColor", SlotCols[2])
+	RuiSetString(StyleEventSlot3, "msgText", SlotStrings[2])
 	//Slot 4	
 	RuiSetInt(StyleEventSlot4, "maxLines", 1)
 	RuiSetInt(StyleEventSlot4, "lineNum", 1)
@@ -385,8 +364,8 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot4, "msgFontSize", 50.0)
 	RuiSetFloat(StyleEventSlot4, "msgAlpha", StyleEventAlpha)
 	RuiSetFloat(StyleEventSlot4, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot4, "msgColor", <0.5, 0.5, 0.5>)
-	RuiSetString(StyleEventSlot4, "msgText", Slot4)
+	RuiSetFloat3(StyleEventSlot4, "msgColor", SlotCols[3])
+	RuiSetString(StyleEventSlot4, "msgText", SlotStrings[3])
 	//Slot 5
 	RuiSetInt(StyleEventSlot5, "maxLines", 1)
 	RuiSetInt(StyleEventSlot5, "lineNum", 1)
@@ -394,10 +373,9 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot5, "msgFontSize", 50.0)
 	RuiSetFloat(StyleEventSlot5, "msgAlpha", StyleEventAlpha)
 	RuiSetFloat(StyleEventSlot5, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot5, "msgColor", <0.5, 0.5, 0.5>)
-	RuiSetString(StyleEventSlot5, "msgText", Slot5)
+	RuiSetFloat3(StyleEventSlot5, "msgColor", SlotCols[4])
+	RuiSetString(StyleEventSlot5, "msgText", SlotStrings[4])
 }
-
 
 //Khalmee's stuff
 /*
@@ -412,7 +390,6 @@ If not touching the ground for 3+ seconds, give points
 -Points for AI kills
 Requires modifying LocalPlayerDidDamageCallback, check if victim is not player and if you're not in replay
 (TODO)
-
 */
 array < float > SpeedBuffer //Where speed samples are stored
 float LastSpeedMeasurement = 0 //Last point in time when speed was measured
@@ -435,43 +412,43 @@ void function AddStyleFromSpeed(){ //Adds style points based on speed
 			cumsum += SpeedSample
 		}
 		avgSpeed = cumsum/SpeedBuffer.len() //and get the average
-		
+
 		//These values should be tweaked, speed:
 		//36, 48, 60, 72
 		if(avgSpeed < 36){
 			movementChain = 0
 		}
 		else if(avgSpeed < 48){
-			AddStyleEvent("speed", 0.3, Rareity1)
+			AddStyleEvent("speed", 0.3, Rareity[0])
 			movementChain++
 		}
 		else if(avgSpeed < 60){
-			AddStyleEvent("great speed", 0.6, Rareity2)
+			AddStyleEvent("great speed", 0.6, Rareity[1])
 			movementChain++
 		}
 		else if(avgSpeed < 72){
-			AddStyleEvent("superior speed", 0.9, Rareity3)
+			AddStyleEvent("superior speed", 0.9, Rareity[2])
 			movementChain++
 		}
 		else{
-			AddStyleEvent("speed demon", 1.2, Rareity4)
+			AddStyleEvent("speed demon", 1.2, Rareity[3])
 			movementChain++
 		}
-		
+
 		//Same here, movement:
 		switch(movementChain){
 			case 3:
-				AddStyleEvent("movement chain", 1.5, Rareity2)
+				AddStyleEvent("movement chain", 1.5, Rareity[0])
 				break
 			case 6:
-				AddStyleEvent("great movement", 2.5, Rareity3)
+				AddStyleEvent("great movement", 2.5, Rareity[2])
 				break
 			default:
 				if(movementChain % 3 == 0 && movementChain >= 9)
-				AddStyleEvent("superior movement", 3.5, Rareity4)
+				AddStyleEvent("superior movement", 3.5, Rareity[3])
 				break
 		}
-		
+
 		SpeedBuffer.clear() //eat up the buffer
 		LastSpeedMeasurement = Time()
 	}
@@ -481,7 +458,7 @@ void function AddStyleFromAirTime(){ //Air time bonus
 	entity p = GetLocalClientPlayer()
 	if(!p.IsOnGround() && !IsSpectating()){ //there should be some sort of check to see if player is in control
 		if(Time() - LastTimeTouchingGround > TimeToBeat){
-			AddStyleEvent("Air Time", 0.6, Rareity2)
+			AddStyleEvent("Air Time", 0.6, Rareity[1])
 			TimeToBeat += 3
 		}
 	}
