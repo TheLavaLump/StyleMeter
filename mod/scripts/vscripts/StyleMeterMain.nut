@@ -24,6 +24,15 @@ void function StyleMeterInit()
 	PercentageBarTopo = topology	
 	AddCallback_OnPlayerKilled(KillEvent)
 	StyleRuiSetup()
+	//Khalmee's stuff
+	/*
+	//This was an attempt to make a background for the meter, but after realizing how big it is i dropped the idea. Experiment with that as you will.
+	var cringe = RuiTopology_CreatePlane( <1600,300,0>, <300, 0, 0>, <0, 400, 0>, false ) //(origin, stretchX, stretchY, ?)
+	var moreCringe = RuiCreate( $"ui/basic_image.rpak", cringe, RUI_DRAW_HUD, -1 )
+    RuiSetFloat3(moreCringe, "basicImageColor", <0,0,0>)
+    RuiSetFloat(moreCringe, "basicImageAlpha", 0.5)
+	*/
+	//end
 	thread UpdateRankUI()
 	TimeSinceLast = Time()
 }
@@ -175,6 +184,16 @@ void function AddStyleEvent( string name, float amount, vector rarity ){
 void function UpdateRankUI(){
 	while(true){
 		TimeNow = Time()
+		
+		//Khalmee's
+		//Functions adding speed and air time bonuses encased in an IF containing various edge cases.
+		//For now I'm turning Air time gain off, since it has problems with match intro and dropping titans, besides that it works fine but I'm not satisfied.
+		if(!IsLobby() && !IsWatchingReplay() && GetLocalClientPlayer() != null && IsAlive(GetLocalClientPlayer())){
+			AddStyleFromSpeed()
+			//AddStyleFromAirTime()
+		}
+		//end
+		
 		StylePosX2 = StylePosX1 + 0.02
 		StylePosY2 = StylePosY1 + 0.03
 		StyleScale2 = 50.0
@@ -284,7 +303,9 @@ void function UpdateRankUI(){
 			}
 		}
 		if (StylePoints > 0.005){
-			StylePoints = StylePoints - 0.001
+			StylePoints = StylePoints - 0.001 //* sqrt(Time()-TimeSinceLast) //To make decay faster if no points are gained
+			//if(StylePoints < 0) //safeguard
+			//	StylePoints = 0
 		}
 		else{
 			StylePoints = 0
@@ -376,5 +397,100 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat3(StyleEventSlot5, "msgColor", <0.5, 0.5, 0.5>)
 	RuiSetString(StyleEventSlot5, "msgText", Slot5)
 }
+
+
+//Khalmee's stuff
+/*
+Goals:
+-Speed calculation:
+Every 2-3 seconds get the average speed by adding up the samples and dividing them by their amount, add that as points
+Every 3 continuous cycles add movement bonus
+(Some aspects came out differently, but DONE)
+-Air time calculation:
+If not touching the ground for 3+ seconds, give points
+(Has issues, look in main loop)
+-Points for AI kills
+Requires modifying LocalPlayerDidDamageCallback, check if victim is not player and if you're not in replay
+(TODO)
+
+*/
+array < float > SpeedBuffer //Where speed samples are stored
+float LastSpeedMeasurement = 0 //Last point in time when speed was measured
+float LastTimeTouchingGround = 10 
+float TimeToBeat = 3 //Next Air Time bonus
+int movementChain = 0 //Number of consecutive speed bonuses
+
+float function GetSpeed(entity ent){ //returns horizontal speed of an entity
+	vector vel = ent.GetVelocity()
+	return sqrt(vel.x * vel.x + vel.y * vel.y) * (0.274176/3) //the const is for measurement in kph
+}
+
+void function AddStyleFromSpeed(){ //Adds style points based on speed
+	entity p = GetLocalClientPlayer()
+	float cumsum = 0 //Cumulative sum, what else did you think it means?
+	float avgSpeed = 0
+	SpeedBuffer.append(GetSpeed(p)) //Add current speed to the buffer
+	if(Time() - LastSpeedMeasurement > 5){ //Every N seconds, check the average and apply bonuses (adjust the time)
+		foreach(SpeedSample in SpeedBuffer){ //sum up speed
+			cumsum += SpeedSample
+		}
+		avgSpeed = cumsum/SpeedBuffer.len() //and get the average
+		
+		//These values should be tweaked, speed:
+		//36, 48, 60, 72
+		if(avgSpeed < 36){
+			movementChain = 0
+		}
+		else if(avgSpeed < 48){
+			AddStyleEvent("speed", 0.3, Rareity1)
+			movementChain++
+		}
+		else if(avgSpeed < 60){
+			AddStyleEvent("great speed", 0.6, Rareity2)
+			movementChain++
+		}
+		else if(avgSpeed < 72){
+			AddStyleEvent("superior speed", 0.9, Rareity3)
+			movementChain++
+		}
+		else{
+			AddStyleEvent("speed demon", 1.2, Rareity4)
+			movementChain++
+		}
+		
+		//Same here, movement:
+		switch(movementChain){
+			case 3:
+				AddStyleEvent("movement chain", 1.5, Rareity2)
+				break
+			case 6:
+				AddStyleEvent("great movement", 2.5, Rareity3)
+				break
+			default:
+				if(movementChain % 3 == 0 && movementChain >= 9)
+				AddStyleEvent("superior movement", 3.5, Rareity4)
+				break
+		}
+		
+		SpeedBuffer.clear() //eat up the buffer
+		LastSpeedMeasurement = Time()
+	}
+}
+
+void function AddStyleFromAirTime(){ //Air time bonus
+	entity p = GetLocalClientPlayer()
+	if(!p.IsOnGround() && !IsSpectating()){ //there should be some sort of check to see if player is in control
+		if(Time() - LastTimeTouchingGround > TimeToBeat){
+			AddStyleEvent("Air Time", 0.6, Rareity2)
+			TimeToBeat += 3
+		}
+	}
+	else
+	{
+		TimeToBeat = 3
+		LastTimeTouchingGround = Time()
+	}
+}
+//end
 
 #endif
