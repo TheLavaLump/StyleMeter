@@ -185,7 +185,7 @@ void function UpdateRankUI(){
 			StylePos2 = <0.8, 0.2, 0>
 		}
 		if (StylePoints > StyleRanks[1]){
-			StyleRankStrings = ["D", "structive"]
+			StyleRankStrings = ["D", "estructive"]
 			StyleCol1 = <0.0, 0.58039215686, 1.0>
 			StylePos2 = <0.82, 0.23, 0>
 		}
