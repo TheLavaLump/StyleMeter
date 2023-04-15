@@ -3,7 +3,7 @@
 	"Description": "Adds an Ultrakill-like style meter to the Hud",
 	"LoadPriority": 2,
 	"RequiredOnClient": false,
-	"Version": "1.1.3",
+	"Version": "1.2.0",
 
 	"Scripts": [
 		{
@@ -12,9 +12,30 @@
 			"ClientCallback": {
 				"After": "StyleMeterInit"
 			}
+		},
+		{
+			"Path": "StyleModSettings.nut",
+			"RunOn": "UI",
+			"UICallback": {
+				"Before": "StyleModSettingsInit"
+			}
 		}
-
 	],
 	"ConVars": [
+		{
+			"Name": "DecayRate",
+			"DefaultValue": "1.0",
+			"Flags": 16777216
+		},
+		{
+			"Name": "EventExpiration",
+			"DefaultValue": "5.0",
+			"Flags": 16777216
+		},
+		{
+			"Name": "StyleMultiplyer",
+			"DefaultValue": "1.0",
+			"Flags": 16777216
+		}
 	]
 }
