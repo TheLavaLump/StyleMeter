@@ -65,16 +65,15 @@ float StylePointPercenage = 0.0
 
 array < vector > Rareity = [<0.5, 0.5, 0.5>, <1.0, 1.0, 1.0>, <0.0, 1.0, 1.0>, <1.0, 0.0, 0.0>]
 
-void function KillEvent( entity victim, entity attacker, int damageSourceId ){
+void function KillEvent( ObituaryCallbackParams KillEventPerams ){
 	entity player = GetLocalClientPlayer()
 	if((TimeNow - TimeSinceLast) > 0.0001){ //To stop Titan kills from running the func twice, probably a better way to solve this but oh well
-		if(attacker == GetLocalClientPlayer()){
-			TimeSinceLast = Time()
+		if(KillEventPerams.attacker == GetLocalClientPlayer()){
 			StyleStreak++
 			Multikill++
-			if(victim.IsTitan()){
+			if(KillEventPerams.victim.IsTitan()){
 				AddStyleEvent( "titan kill", 5.0, Rareity[1] )
-				if (damageSourceId == 185){
+				if (KillEventPerams.damageSourceId == 185){
 					AddStyleEvent( "Termination", 0.2, Rareity[2] ) //Titan execution
 				}
 			}
@@ -90,38 +89,38 @@ void function KillEvent( entity victim, entity attacker, int damageSourceId ){
 			else if (StyleStreak == 10){
 				AddStyleEvent( "Untouchable", 1.0, Rareity[3] )				
 			}
-			if(damageSourceId == 110 || damageSourceId == 75 || damageSourceId == 237 || damageSourceId == 40 || damageSourceId == 57 || damageSourceId == 81 ){
+			if(KillEventPerams.damageSourceId == 110 || KillEventPerams.damageSourceId == 75 || KillEventPerams.damageSourceId == 237 || KillEventPerams.damageSourceId == 40 || KillEventPerams.damageSourceId == 57 || KillEventPerams.damageSourceId == 81 ){
 				AddStyleEvent( "Incineration", 0.5, Rareity[0] ) //Firestar + all of scorches abilities (hopefully)
 			}
-			else if(!victim.IsTitan()){
+			else if((KillEventPerams.victim.IsTitan()) != true){
 				AddStyleEvent( "pilot kill", 2.0, Rareity[1] )
-				if ( damageSourceId == 126 || damageSourceId ==  135 || damageSourceId ==  119 )
+				if (KillEventPerams.damageSourceId == 126 || KillEventPerams.damageSourceId ==  135 || KillEventPerams.damageSourceId ==  119 )
 				{
 					AddStyleEvent( "Obliterated", 0.2, Rareity[0] ) // Cold war, Epg, Charge rifle
 				}
-				else if (damageSourceId == 140){
+				else if (KillEventPerams.damageSourceId == 140){
 					AddStyleEvent( "Disrespect", 0.2, Rareity[0] ) // Pilot melee
 				}
-				else if (damageSourceId == 186){
+				else if (KillEventPerams.damageSourceId == 186){
 					AddStyleEvent( "Execution", 3.0, Rareity[2] ) //Pilot execution
 				}
-				else if (damageSourceId == 45){
+				else if (KillEventPerams.damageSourceId == 45){
 					AddStyleEvent( "Railcannoned", 0.2, Rareity[0] ) // Railgun
 				}
-				else if (damageSourceId == 111){
+				else if (KillEventPerams.damageSourceId == 111){
 					AddStyleEvent( "Bankrupt", 3.0, Rareity[2]) //Pulse blade
 				}
 				}
-				else if (damageSourceId == 85){
+				else if (KillEventPerams.damageSourceId == 85){
 					AddStyleEvent( "Why are you even using this", 0.1, Rareity[0]) //Electric smoke nades
 				}
-				else if (damageSourceId == 151){
+				else if (KillEventPerams.damageSourceId == 151){
 					AddStyleEvent( "sliced", 0.2, Rareity[0] ) //Ronin melee
 				}
-			if (damageSourceId == 44){
+			if (KillEventPerams.damageSourceId == 44){
 				AddStyleEvent( "Nuke", 4.0, Rareity[2] )//Nukelear eject
 			}
-			if(victim.IsTitan() && !player.IsTitan()){
+			if(KillEventPerams.victim.IsTitan() && !player.IsTitan()){
 				AddStyleEvent( "takedown", 2.0, Rareity[3] ) //Titan kill as pilot
 			}
 		}
@@ -129,20 +128,25 @@ void function KillEvent( entity victim, entity attacker, int damageSourceId ){
 }
 
 void function AddStyleFromDmg( float num ){
-	StylePoints += num
+	StylePoints += (num * GetConVarFloat("StyleMultiplyer"))
 }
 
-void function OnDamage( entity player, entity victim, vector Pos, int damageType){
+void function OnDamage( entity player, entity victim, vector Pos, int scriptDamageType){
 	AddStyleFromDmg(0.1)
-	if(damageType & DF_KILLSHOT){
+	if(scriptDamageType & DF_KILLSHOT){
 		if(!victim.IsPlayer()){	
 			AddStyleEvent( "kill", 0.4, Rareity[0]) // Ai kills
 		}
+		if(scriptDamageType & DF_HEADSHOT){ // Headshot kills
+			AddStyleEvent("Headshot", 0.2, Rareity[0])
+		}
 	}
+	
 }
 
 void function AddStyleEvent( string name, float amount, vector rarity ){
-	StylePoints = StylePoints + amount
+	TimeSinceLast = Time()
+	StylePoints += (amount * GetConVarFloat("StyleMultiplyer"))
 	if (Slot1Full == false){
 		SlotStrings[0] = ("+" + name)
 		SlotCols[0] = rarity
@@ -218,7 +222,7 @@ void function UpdateRankUI(){
 			StyleCol1 = <1.0, 0.8431372549, 0.0>
 			StyleCol2 = <1.0, 0.4431372549, 0.0>
 			StyleScale2 = 70.0
-			StylePos2 += <0.002, 0.002, 0>
+			StylePos2 = StylePos1 + <0.002, 0.002, 0>
 			}
 		//Refresh the Rui of the style meter
 		RuiSetFloat2(StyleEventSlot1, "msgPos", StylePos1 + <0, 0.10, 0>)
@@ -258,15 +262,17 @@ void function UpdateRankUI(){
 		}
 		StyleBarWidth = (StylePointPercenage/13.3333333333) //Percentage to width on the bar
 		RuiTopology_UpdateSphereArcs(PercentageBarTopo,(COCKPIT_RUI_WIDTH * StyleBarWidth),(COCKPIT_RUI_HEIGHT * 0.017), COCKPIT_RUI_SUBDIV) //Update the bar
-		if(((TimeNow - TimeSinceLast) > 5)){
+		if(((TimeNow - TimeSinceLast) > GetConVarFloat("EventExpiration"))){
 			StyleEventAlpha = StyleEventAlpha - 0.01
-			if((TimeNow - TimeSinceLast) > 7){
+			if((TimeNow - TimeSinceLast) > GetConVarFloat("EventExpiration") + 1.5){
 				SlotStrings[0] = ""
 				SlotStrings[1] = ""
 				SlotStrings[2] = ""
 				SlotStrings[3] = ""
 				SlotStrings[4] = ""
-				Multikill = 0
+				if((TimeNow - TimeSinceLast) > 6){
+					Multikill = 0
+				}
 			}
 		}
 		StylePointPercenage = StylePoints
@@ -281,8 +287,8 @@ void function UpdateRankUI(){
 			StyleStreak = 0
 			}
 		}
-		if (StylePoints > 0.005){
-			StylePoints = StylePoints - 0.001 //* sqrt(Time()-TimeSinceLast) //To make decay faster if no points are gained
+		if (StylePoints > 0.001 * GetConVarFloat("DecayRate")){
+			StylePoints = StylePoints - 0.001 * GetConVarFloat("DecayRate") //* sqrt(Time()-TimeSinceLast) //To make decay faster if no points are gained // Decay is now edited in modsettings
 			//if(StylePoints < 0) //safeguard
 			//	StylePoints = 0
 		}
@@ -419,19 +425,19 @@ void function AddStyleFromSpeed(){ //Adds style points based on speed
 			movementChain = 0
 		}
 		else if(avgSpeed < 48){
-			AddStyleEvent("speed", 0.3, Rareity[0])
+			AddStyleEvent("speed", 0.7, Rareity[0])
 			movementChain++
 		}
 		else if(avgSpeed < 60){
-			AddStyleEvent("great speed", 0.6, Rareity[1])
+			AddStyleEvent("great speed", 1.0, Rareity[1])
 			movementChain++
 		}
 		else if(avgSpeed < 72){
-			AddStyleEvent("superior speed", 0.9, Rareity[2])
+			AddStyleEvent("superior speed", 1.3, Rareity[2])
 			movementChain++
 		}
 		else{
-			AddStyleEvent("speed demon", 1.2, Rareity[3])
+			AddStyleEvent("speed demon", 1.8, Rareity[3])
 			movementChain++
 		}
 
