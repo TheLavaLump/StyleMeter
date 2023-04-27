@@ -63,66 +63,86 @@ vector StylePos2 = <0.92, 0.23, 0>
 float StyleScale2 = 50.0
 float StylePointPercenage = 0.0
 
+float HammerUnitDist = 0.0
+float MeterDist = 0.0
+
 array < vector > Rareity = [<0.5, 0.5, 0.5>, <1.0, 1.0, 1.0>, <0.0, 1.0, 1.0>, <1.0, 0.0, 0.0>]
+
+entity RecentlyAttackedPlayer = null
 
 void function KillEvent( ObituaryCallbackParams KillEventPerams ){
 	entity player = GetLocalClientPlayer()
-	if((TimeNow - TimeSinceLast) > 0.0001){ //To stop Titan kills from running the func twice, probably a better way to solve this but oh well
-		if(KillEventPerams.attacker == GetLocalClientPlayer()){
-			StyleStreak++
-			Multikill++
-			if(KillEventPerams.victim.IsTitan()){
-				AddStyleEvent( "titan kill", 5.0, Rareity[1] )
-				if (KillEventPerams.damageSourceId == 185){
-					AddStyleEvent( "Termination", 0.2, Rareity[2] ) //Titan execution
-				}
-			}
-			if (Multikill > 1){
-				AddStyleEvent( "Multikill X" + Multikill, 1.0, Rareity[2] ) // Multikills 
-			}
-			if (StyleStreak == 3 ){
-				AddStyleEvent( "Streak", 1.0, Rareity[1] ) //Killstreaks
-			}
-			else if (StyleStreak == 6){
-				AddStyleEvent( "Great Streak", 1.0, Rareity[2] )							
-			}
-			else if (StyleStreak == 10){
-				AddStyleEvent( "Untouchable", 1.0, Rareity[3] )				
-			}
-			if(KillEventPerams.damageSourceId == 110 || KillEventPerams.damageSourceId == 75 || KillEventPerams.damageSourceId == 237 || KillEventPerams.damageSourceId == 40 || KillEventPerams.damageSourceId == 57 || KillEventPerams.damageSourceId == 81 ){
-				AddStyleEvent( "Incineration", 0.5, Rareity[0] ) //Firestar + all of scorches abilities (hopefully)
-			}
-			else if((KillEventPerams.victim.IsTitan()) != true){
-				AddStyleEvent( "pilot kill", 2.0, Rareity[1] )
-				if (KillEventPerams.damageSourceId == 126 || KillEventPerams.damageSourceId ==  135 || KillEventPerams.damageSourceId ==  119 )
-				{
-					AddStyleEvent( "Obliterated", 0.2, Rareity[0] ) // Cold war, Epg, Charge rifle
-				}
-				else if (KillEventPerams.damageSourceId == 140){
-					AddStyleEvent( "Disrespect", 0.2, Rareity[0] ) // Pilot melee
-				}
-				else if (KillEventPerams.damageSourceId == 186){
-					AddStyleEvent( "Execution", 3.0, Rareity[2] ) //Pilot execution
-				}
-				else if (KillEventPerams.damageSourceId == 45){
-					AddStyleEvent( "Railcannoned", 0.2, Rareity[0] ) // Railgun
-				}
-				else if (KillEventPerams.damageSourceId == 111){
-					AddStyleEvent( "Bankrupt", 3.0, Rareity[2]) //Pulse blade
-				}
-				}
-				else if (KillEventPerams.damageSourceId == 85){
-					AddStyleEvent( "Why are you even using this", 0.1, Rareity[0]) //Electric smoke nades
-				}
-				else if (KillEventPerams.damageSourceId == 151){
-					AddStyleEvent( "sliced", 0.2, Rareity[0] ) //Ronin melee
-				}
-			if (KillEventPerams.damageSourceId == 44){
-				AddStyleEvent( "Nuke", 4.0, Rareity[2] )//Nukelear eject
+	if((KillEventPerams.victim == RecentlyAttackedPlayer) && (player != KillEventPerams.attacker) && (!KillEventPerams.victimIsOwnedTitan)){
+		AddStyleEvent( "Assist", 1.0, Rareity[0])
+		if(KillEventPerams.damageSourceId == 206){
+			AddStyleEvent( "Environmental kill", 3.0, Rareity[2])	
+		}
+		else if(KillEventPerams.damageSourceId == 211){
+			AddStyleEvent( "Out of Bounds", 3.0, Rareity[2])	
+		}
+	}
+	if(KillEventPerams.attacker == GetLocalClientPlayer()){
+	
+		// Created by Mauer
+		HammerUnitDist = Distance(player.EyePosition(), KillEventPerams.victim.GetOrigin())
+		MeterDist = HammerUnitDist * 0.07616/3
+
+		StyleStreak++
+		if(KillEventPerams.victim.IsTitan() && KillEventPerams.victimIsOwnedTitan){
+			AddStyleEvent( "titan kill", 1.0, Rareity[1] )
+			if (KillEventPerams.damageSourceId == 185){
+				AddStyleEvent( "Termination", 0.2, Rareity[2] ) //Titan execution
 			}
 			if(KillEventPerams.victim.IsTitan() && !player.IsTitan()){
-				AddStyleEvent( "takedown", 2.0, Rareity[3] ) //Titan kill as pilot
+			AddStyleEvent( "takedown", 2.0, Rareity[3] )
+			}//Titan kill as pilot
+		}
+		if (Multikill > 1){
+			AddStyleEvent( "Multikill X" + Multikill, 1.0, Rareity[2] ) // Multikills 
+		}
+		if (StyleStreak == 3 ){
+			AddStyleEvent( "Streak", 1.0, Rareity[1] ) //Killstreaks
+		}
+		else if (StyleStreak == 6){
+			AddStyleEvent( "Great Streak", 1.0, Rareity[2] )							
+		}
+		else if (StyleStreak == 10){
+			AddStyleEvent( "Untouchable", 1.0, Rareity[3] )				
+		}
+		if(KillEventPerams.damageSourceId == 110 || KillEventPerams.damageSourceId == 75 || KillEventPerams.damageSourceId == 237 || KillEventPerams.damageSourceId == 40 || KillEventPerams.damageSourceId == 57 || KillEventPerams.damageSourceId == 81 ){
+				AddStyleEvent( "Incineration", 0.5, Rareity[0] ) //Firestar + all of scorches abilities (hopefully)
 			}
+		else if(KillEventPerams.victim.IsPlayer && !KillEventPerams.victimIsOwnedTitan){
+			Multikill++
+			AddStyleEvent("Pilot Kill", 2.0, Rareity[1] )
+			if (MeterDist >= 40.00){ // Longshots
+				AddStyleEvent( "longshot " + format("%.1f", MeterDist) + "m", 2.0, Rareity[2] ) // Also Created by Mauer
+			}
+			if (KillEventPerams.damageSourceId == 126 || KillEventPerams.damageSourceId ==  135 || KillEventPerams.damageSourceId ==  119 )
+			{
+				AddStyleEvent( "Obliterated", 0.2, Rareity[0] ) // Cold war, Epg, Charge rifle
+			}
+			else if (KillEventPerams.damageSourceId == 140){
+				AddStyleEvent( "Disrespect", 0.2, Rareity[0] ) // Pilot melee
+			}
+			else if (KillEventPerams.damageSourceId == 186){
+				AddStyleEvent( "Execution", 3.0, Rareity[2] ) //Pilot execution
+			}
+			else if (KillEventPerams.damageSourceId == 45){
+				AddStyleEvent( "Railcannnoned", 0.2, Rareity[0] ) // Railgun
+			}
+			else if (KillEventPerams.damageSourceId == 111){
+				AddStyleEvent( "Bankrupt", 3.0, Rareity[2]) //Pulse blade
+			}
+			else if (KillEventPerams.damageSourceId == 85){
+				AddStyleEvent( "Why are you even using this", 0.1, Rareity[0]) //Electric smoke nades
+			}
+			else if (KillEventPerams.damageSourceId == 151){
+				AddStyleEvent( "sliced", 0.2, Rareity[0] ) //Ronin melee
+			}
+		}
+		if (KillEventPerams.damageSourceId == 44){
+			AddStyleEvent( "Nuke", 4.0, Rareity[2] )//Nukelear eject
 		}
 	}
 }
@@ -132,6 +152,7 @@ void function AddStyleFromDmg( float num ){
 }
 
 void function OnDamage( entity player, entity victim, vector Pos, int scriptDamageType){
+	RecentlyAttackedPlayer = victim
 	AddStyleFromDmg(0.1)
 	if(scriptDamageType & DF_KILLSHOT){
 		if(!victim.IsPlayer()){	
@@ -191,6 +212,7 @@ void function UpdateRankUI(){
 		if (StylePoints > StyleRanks[1]){
 			StyleRankStrings = ["D", "estructive"]
 			StyleCol1 = <0.0, 0.58039215686, 1.0>
+			StyleCol2 = <1.0, 1.0, 1.0>
 			StylePos2 = <0.82, 0.23, 0>
 		}
 		if (StylePoints > StyleRanks[2]){
