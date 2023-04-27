@@ -40,7 +40,7 @@ void function StyleMeterInit()
 	
 array < string > SlotStrings = ["", "", "", "", ""]
 array < vector > SlotCols = [<0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>]
-array < float > StyleRanks = [0.0, 0.01, 2.0, 4.0, 6.0, 8.0, 10.0]
+array < float > StyleRanks = [0.0, 0.01, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 array < string > StyleRankStrings = ["", ""]
 
 float StyleBarWidth = 0.15
@@ -240,6 +240,18 @@ void function UpdateRankUI(){
 			StylePos2 = <0.82, 0.23, 0>
 		}
 		if (StylePoints > StyleRanks[6]){
+			StyleRankStrings = ["SS", "adistic"]
+			StyleCol1 = <1.0, 0.0156862745, 0.0156862745>
+			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.8375, 0.23, 0>
+		}
+		if (StylePoints > StyleRanks[7]){
+			StyleRankStrings = ["SSS", "hitstorm"]
+			StyleCol1 = <1.0, 0.0156862745, 0.0156862745>
+			StyleCol2 = <1.0, 1.0, 1.0>
+			StylePos2 = <0.855, 0.23, 0>
+		}
+		if (StylePoints > StyleRanks[8]){
 			StyleRankStrings = ["ULTRAFALL", "ULTRAFALL"]
 			StyleCol1 = <1.0, 0.8431372549, 0.0>
 			StyleCol2 = <1.0, 0.4431372549, 0.0>
@@ -279,8 +291,8 @@ void function UpdateRankUI(){
 		RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
 		RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
 		
-		if (StylePoints >= 12){ //Style point cap
-			StylePoints = 12
+		if (StylePoints >= 18){ //Style point cap
+			StylePoints = 18
 		}
 		StyleBarWidth = (StylePointPercenage/13.3333333333) //Percentage to width on the bar
 		RuiTopology_UpdateSphereArcs(PercentageBarTopo,(COCKPIT_RUI_WIDTH * StyleBarWidth),(COCKPIT_RUI_HEIGHT * 0.017), COCKPIT_RUI_SUBDIV) //Update the bar
