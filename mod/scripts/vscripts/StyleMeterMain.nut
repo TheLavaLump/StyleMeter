@@ -15,13 +15,12 @@ var percentageRui = null
 
 var topology = null
 
-
 void function StyleMeterInit()
 {
 	topology = RuiTopology_CreateSphere(COCKPIT_RUI_OFFSET - <0, 82, -21>, <0, -1, 0.037>, <0, 0.00, -1>, COCKPIT_RUI_RADIUS, COCKPIT_RUI_WIDTH * 0.15, COCKPIT_RUI_HEIGHT * 0.003, COCKPIT_RUI_SUBDIV)
 	entity player = GetLocalClientPlayer()
 	AddLocalPlayerDidDamageCallback(OnDamage)
-	PercentageBarTopo = topology	
+	PercentageBarTopo = topology
 	AddCallback_OnPlayerKilled(KillEvent)
 	StyleRuiSetup()
 	thread UpdateRankUI()
@@ -37,7 +36,7 @@ void function StyleMeterInit()
     RuiSetFloat(moreCringe, "basicImageAlpha", 0.5)
 	*/
 	//end
-	
+
 array < string > SlotStrings = ["", "", "", "", ""]
 array < vector > SlotCols = [<0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>]
 array < float > StyleRanks = [0.0, 0.01, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
@@ -66,83 +65,100 @@ float StylePointPercenage = 0.0
 float HammerUnitDist = 0.0
 float MeterDist = 0.0
 
-array < vector > Rareity = [<0.5, 0.5, 0.5>, <1.0, 1.0, 1.0>, <0.0, 1.0, 1.0>, <1.0, 0.0, 0.0>]
+array < vector > Rarity = [<0.5, 0.5, 0.5>, <1.0, 1.0, 1.0>, <0.0, 1.0, 1.0>, <1.0, 0.0, 0.0>]
 
 entity RecentlyAttackedPlayer = null
 
-void function KillEvent( ObituaryCallbackParams KillEventPerams ){
+void function KillEvent( ObituaryCallbackParams KillEventParams ){
 	entity player = GetLocalClientPlayer()
-	if((KillEventPerams.victim == RecentlyAttackedPlayer) && (player != KillEventPerams.attacker) && (!KillEventPerams.victimIsOwnedTitan)){
-		AddStyleEvent( "Assist", 1.0, Rareity[0])
-		if(KillEventPerams.damageSourceId == 206){
-			AddStyleEvent( "Environmental kill", 3.0, Rareity[2])	
+	if((KillEventParams.victim == RecentlyAttackedPlayer) && (player != KillEventParams.attacker) && (!KillEventParams.victimIsOwnedTitan)){
+		AddStyleEvent( "Assist", 1.0, Rarity[0])
+		if(KillEventParams.damageSourceId == 206){
+			AddStyleEvent( "Envirokill", 3.0, Rarity[2])
 		}
-		else if(KillEventPerams.damageSourceId == 211){
-			AddStyleEvent( "Out of Bounds", 3.0, Rareity[2])	
+		else if(KillEventParams.damageSourceId == 211){
+			AddStyleEvent( "Out of Bounds", 3.0, Rarity[2])
 		}
 	}
-	if(KillEventPerams.attacker == GetLocalClientPlayer()){
-	
+	if(KillEventParams.attacker == GetLocalClientPlayer()){
+
 		// Created by Mauer
-		HammerUnitDist = Distance(player.EyePosition(), KillEventPerams.victim.GetOrigin())
+		HammerUnitDist = Distance(player.EyePosition(), KillEventParams.victim.GetOrigin())
 		MeterDist = HammerUnitDist * 0.07616/3
 
+		// Created by in1tiate, adapted from code by Dinorush
+		// Checks if the dead player was at least 1500 hammer units above solid ground when they died.
+		// Somewhat reliable indicator of a goose (a kill on an ejecting pilot)
+		TraceResults gooseTest = TraceLine (KillEventParams.victim.GetOrigin(), 
+		KillEventParams.victim.GetOrigin() + < 0.0, 0.0, -1500.0>, [KillEventParams.victim],
+		TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
+
+		if (KillEventParams.victim == GetLocalClientPlayer()) { // Player killed themselves
+			StyleStreak = 0
+			AddStyleEvent( "Suicide", 0.0, Rarity[1] )
+			return
+		}
+
 		StyleStreak++
-		if(KillEventPerams.victim.IsTitan() && KillEventPerams.victimIsOwnedTitan){
-			AddStyleEvent( "titan kill", 1.0, Rareity[1] )
-			if (KillEventPerams.damageSourceId == 185){
-				AddStyleEvent( "Termination", 0.2, Rareity[2] ) //Titan execution
+		if(KillEventParams.victim.IsTitan() && KillEventParams.victimIsOwnedTitan){
+			AddStyleEvent( "titan kill", 1.0, Rarity[1] )
+			if (KillEventParams.damageSourceId == 185){
+				AddStyleEvent( "Termination", 0.2, Rarity[2] ) //Titan execution
 			}
-			if(KillEventPerams.victim.IsTitan() && !player.IsTitan()){
-			AddStyleEvent( "takedown", 2.0, Rareity[3] )
+			if(KillEventParams.victim.IsTitan() && !player.IsTitan()){
+			AddStyleEvent( "takedown", 2.0, Rarity[3] )
 			}//Titan kill as pilot
 		}
 		if (Multikill > 1){
-			AddStyleEvent( "Multikill X" + Multikill, 1.0, Rareity[2] ) // Multikills 
+			AddStyleEvent( "Multikill X" + Multikill, 1.0, Rarity[2] ) // Multikills
 		}
 		if (StyleStreak == 3 ){
-			AddStyleEvent( "Streak", 1.0, Rareity[1] ) //Killstreaks
+			AddStyleEvent( "Streak", 1.0, Rarity[1] ) //Killstreaks
 		}
 		else if (StyleStreak == 6){
-			AddStyleEvent( "Great Streak", 1.0, Rareity[2] )							
+			AddStyleEvent( "Great Streak", 1.0, Rarity[2] )
 		}
 		else if (StyleStreak == 10){
-			AddStyleEvent( "Untouchable", 1.0, Rareity[3] )				
+			AddStyleEvent( "Untouchable", 1.0, Rarity[3] )
 		}
-		if(KillEventPerams.damageSourceId == 110 || KillEventPerams.damageSourceId == 75 || KillEventPerams.damageSourceId == 237 || KillEventPerams.damageSourceId == 40 || KillEventPerams.damageSourceId == 57 || KillEventPerams.damageSourceId == 81 ){
-				AddStyleEvent( "Incineration", 0.5, Rareity[0] ) //Firestar + all of scorches abilities (hopefully)
+		if(KillEventParams.damageSourceId == 110 || KillEventParams.damageSourceId == 75 || KillEventParams.damageSourceId == 237 || KillEventParams.damageSourceId == 40 || KillEventParams.damageSourceId == 57 || KillEventParams.damageSourceId == 81 ){
+				AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Firestar + all of scorches abilities (hopefully)
 			}
-		else if(KillEventPerams.victim.IsPlayer && !KillEventPerams.victimIsOwnedTitan){
+		else if(KillEventParams.victim.IsPlayer && !KillEventParams.victimIsOwnedTitan){
 			Multikill++
-			AddStyleEvent("Pilot Kill", 2.0, Rareity[1] )
-			if (MeterDist >= 40.00){ // Longshots
-				AddStyleEvent( "longshot " + format("%.1f", MeterDist) + "m", 2.0, Rareity[2] ) // Also Created by Mauer
+			AddStyleEvent("Pilot Kill", 2.0, Rarity[1] )
+			
+			if(gooseTest.fraction == 1) { // Goose (kill on ejecting pilot)
+				AddStyleEvent( "Goosed", 2.5, Rarity[2] )
 			}
-			if (KillEventPerams.damageSourceId == 126 || KillEventPerams.damageSourceId ==  135 || KillEventPerams.damageSourceId ==  119 )
+			else if (MeterDist >= 40.00){ // Longshots
+				AddStyleEvent( "longshot " + format("%.1f", MeterDist) + "m", 2.0, Rarity[2] ) // Also Created by Mauer
+			}
+			if (KillEventParams.damageSourceId == 126 || KillEventParams.damageSourceId ==  135 || KillEventParams.damageSourceId ==  119 )
 			{
-				AddStyleEvent( "Obliterated", 0.2, Rareity[0] ) // Cold war, Epg, Charge rifle
+				AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) // Cold war, Epg, Charge rifle
 			}
-			else if (KillEventPerams.damageSourceId == 140){
-				AddStyleEvent( "Disrespect", 0.2, Rareity[0] ) // Pilot melee
+			else if (KillEventParams.damageSourceId == 140){
+				AddStyleEvent( "Disrespect", 0.2, Rarity[0] ) // Pilot melee
 			}
-			else if (KillEventPerams.damageSourceId == 186){
-				AddStyleEvent( "Execution", 3.0, Rareity[2] ) //Pilot execution
+			else if (KillEventParams.damageSourceId == 186){
+				AddStyleEvent( "Execution", 3.0, Rarity[2] ) //Pilot execution
 			}
-			else if (KillEventPerams.damageSourceId == 45){
-				AddStyleEvent( "Railcannnoned", 0.2, Rareity[0] ) // Railgun
+			else if (KillEventParams.damageSourceId == 45){
+				AddStyleEvent( "Railcannnoned", 0.2, Rarity[0] ) // Railgun
 			}
-			else if (KillEventPerams.damageSourceId == 111){
-				AddStyleEvent( "Bankrupt", 3.0, Rareity[2]) //Pulse blade
+			else if (KillEventParams.damageSourceId == 111){
+				AddStyleEvent( "Bankrupt", 3.0, Rarity[2]) //Pulse blade
 			}
-			else if (KillEventPerams.damageSourceId == 85){
-				AddStyleEvent( "Why are you even using this", 0.1, Rareity[0]) //Electric smoke nades
+			else if (KillEventParams.damageSourceId == 85){
+				AddStyleEvent( "Why are you even using this", 0.1, Rarity[0]) //Electric smoke nades
 			}
-			else if (KillEventPerams.damageSourceId == 151){
-				AddStyleEvent( "sliced", 0.2, Rareity[0] ) //Ronin melee
+			else if (KillEventParams.damageSourceId == 151){
+				AddStyleEvent( "sliced", 0.2, Rarity[0] ) //Ronin melee
 			}
 		}
-		if (KillEventPerams.damageSourceId == 44){
-			AddStyleEvent( "Nuke", 4.0, Rareity[2] )//Nukelear eject
+		if (KillEventParams.damageSourceId == 44){
+			AddStyleEvent( "Nuke", 4.0, Rarity[2] )//Nuclear eject
 		}
 	}
 }
@@ -153,16 +169,20 @@ void function AddStyleFromDmg( float num ){
 
 void function OnDamage( entity player, entity victim, vector Pos, int scriptDamageType){
 	RecentlyAttackedPlayer = victim
+	if (victim == player) { // Self-damage penalty
+		AddStyleFromDmg(-0.5)
+		return
+	}
 	AddStyleFromDmg(0.1)
 	if(scriptDamageType & DF_KILLSHOT){
-		if(!victim.IsPlayer()){	
-			AddStyleEvent( "kill", 0.4, Rareity[0]) // Ai kills
+		if(!victim.IsPlayer()){
+			AddStyleEvent( "kill", 0.4, Rarity[0]) // Ai kills
 		}
 		if(scriptDamageType & DF_HEADSHOT){ // Headshot kills
-			AddStyleEvent("Headshot", 0.2, Rareity[0])
+			AddStyleEvent("Headshot", 0.2, Rarity[0])
 		}
 	}
-	
+
 }
 
 void function AddStyleEvent( string name, float amount, vector rarity ){
@@ -190,7 +210,7 @@ void function AddStyleEvent( string name, float amount, vector rarity ){
 		StyleEventAlpha = 1.0
 	}
 }
-  
+
 
 void function UpdateRankUI(){
 	while(true){
@@ -268,29 +288,29 @@ void function UpdateRankUI(){
 		RuiSetFloat(StyleEventSlot2, "msgAlpha", StyleEventAlpha)
 		RuiSetFloat3(StyleEventSlot2, "msgColor", SlotCols[1])
 		RuiSetString(StyleEventSlot2, "msgText", SlotStrings[1])
-	
+
 		RuiSetFloat2(StyleEventSlot3, "msgPos", StylePos1 + <0, 0.16, 0>)
 		RuiSetFloat(StyleEventSlot3, "msgAlpha", StyleEventAlpha)
 		RuiSetFloat3(StyleEventSlot3, "msgColor", SlotCols[2])
 		RuiSetString(StyleEventSlot3, "msgText", SlotStrings[2])
-	
+
 		RuiSetFloat2(StyleEventSlot4, "msgPos", StylePos1 + <0, 0.19, 0>)
 		RuiSetFloat(StyleEventSlot4, "msgAlpha", StyleEventAlpha)
 		RuiSetFloat3(StyleEventSlot4, "msgColor", SlotCols[3])
 		RuiSetString(StyleEventSlot4, "msgText", SlotStrings[3])
-		
+
 		RuiSetFloat2(StyleEventSlot5, "msgPos", StylePos1 + <0, 0.22, 0>)
 		RuiSetFloat(StyleEventSlot5, "msgAlpha", StyleEventAlpha)
 		RuiSetFloat3(StyleEventSlot5, "msgColor", SlotCols[4])
 		RuiSetString(StyleEventSlot5, "msgText", SlotStrings[4])
-			
+
 		RuiSetFloat2(StyleRankRui2, "msgPos", StylePos2)
 		RuiSetFloat(StyleRankRui2, "msgFontSize", StyleScale2)
 		RuiSetFloat3(StyleRankRui2, "msgColor", StyleCol2)
 		RuiSetFloat3(StyleRankRui1, "msgColor", StyleCol1)
 		RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
 		RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
-		
+
 		if (StylePoints >= 18){ //Style point cap
 			StylePoints = 18
 		}
@@ -341,7 +361,7 @@ void function UpdateRankUI(){
 }
 
 
-void function StyleRuiSetup(){ // Puting these here to make me seam more orgainsed than I am :)
+void function StyleRuiSetup(){ // Putting these here to make me seem more orgainsed than I am :)
 	percentageRui = RuiCreate( $"ui/basic_image.rpak", PercentageBarTopo, RUI_DRAW_COCKPIT, 0)
 	StyleRankRui2 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
 	StyleRankRui1 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
@@ -350,23 +370,23 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	StyleEventSlot3 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
 	StyleEventSlot4 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
 	StyleEventSlot5 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	
+
 	//Style rank Segment 1
 	RuiSetInt(StyleRankRui1, "maxLines", 1)
-	RuiSetInt(StyleRankRui1, "lineNum", 1)	
+	RuiSetInt(StyleRankRui1, "lineNum", 1)
 	RuiSetFloat2(StyleRankRui1, "msgPos", StylePos1)
 	RuiSetFloat(StyleRankRui1, "msgFontSize", 70.0)
-	RuiSetFloat(StyleRankRui1, "msgAlpha", 1.0)	
+	RuiSetFloat(StyleRankRui1, "msgAlpha", 1.0)
 	RuiSetFloat(StyleRankRui1, "thicken", 0.0)
 	RuiSetFloat3(StyleRankRui1, "msgColor", StyleCol1)
 	RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
-	//Style rank Segment 2	
+	//Style rank Segment 2
 	RuiSetInt(StyleRankRui2, "maxLines", 1)
 	RuiSetInt(StyleRankRui2, "lineNum", 1)
 	RuiSetFloat2(StyleRankRui2, "msgPos", StylePos2)
 	RuiSetFloat(StyleRankRui2, "msgFontSize", StyleScale2)
 	RuiSetFloat(StyleRankRui2, "msgAlpha", 1.0)
-	RuiSetFloat(StyleRankRui2, "thicken", 0.0)	
+	RuiSetFloat(StyleRankRui2, "thicken", 0.0)
 	RuiSetFloat3(StyleRankRui2, "msgColor", StyleCol2)
 	RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
 
@@ -388,7 +408,7 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot2, "thicken", 0.0)
 	RuiSetFloat3(StyleEventSlot2, "msgColor", SlotCols[1])
 	RuiSetString(StyleEventSlot2, "msgText", SlotStrings[1])
-	//Slot 3	
+	//Slot 3
 	RuiSetInt(StyleEventSlot3, "maxLines", 1)
 	RuiSetInt(StyleEventSlot3, "lineNum", 1)
 	RuiSetFloat2(StyleEventSlot3, "msgPos", <StylePosX1, StylePosY1, 0>)
@@ -397,7 +417,7 @@ void function StyleRuiSetup(){ // Puting these here to make me seam more orgains
 	RuiSetFloat(StyleEventSlot3, "thicken", 0.0)
 	RuiSetFloat3(StyleEventSlot3, "msgColor", SlotCols[2])
 	RuiSetString(StyleEventSlot3, "msgText", SlotStrings[2])
-	//Slot 4	
+	//Slot 4
 	RuiSetInt(StyleEventSlot4, "maxLines", 1)
 	RuiSetInt(StyleEventSlot4, "lineNum", 1)
 	RuiSetFloat2(StyleEventSlot4, "msgPos", <StylePosX1, StylePosY1, 0>)
@@ -433,7 +453,7 @@ Requires modifying LocalPlayerDidDamageCallback, check if victim is not player a
 */
 array < float > SpeedBuffer //Where speed samples are stored
 float LastSpeedMeasurement = 0 //Last point in time when speed was measured
-float LastTimeTouchingGround = 10 
+float LastTimeTouchingGround = 10
 float TimeToBeat = 3 //Next Air Time bonus
 int movementChain = 0 //Number of consecutive speed bonuses
 
@@ -459,33 +479,33 @@ void function AddStyleFromSpeed(){ //Adds style points based on speed
 			movementChain = 0
 		}
 		else if(avgSpeed < 48){
-			AddStyleEvent("speed", 0.7, Rareity[0])
+			AddStyleEvent("speed", 0.7, Rarity[0])
 			movementChain++
 		}
 		else if(avgSpeed < 60){
-			AddStyleEvent("great speed", 1.0, Rareity[1])
+			AddStyleEvent("great speed", 1.0, Rarity[1])
 			movementChain++
 		}
 		else if(avgSpeed < 72){
-			AddStyleEvent("superior speed", 1.3, Rareity[2])
+			AddStyleEvent("superior speed", 1.3, Rarity[2])
 			movementChain++
 		}
 		else{
-			AddStyleEvent("speed demon", 1.8, Rareity[3])
+			AddStyleEvent("speed demon", 1.8, Rarity[3])
 			movementChain++
 		}
 
 		//Same here, movement:
 		switch(movementChain){
 			case 3:
-				AddStyleEvent("movement chain", 1.5, Rareity[0])
+				AddStyleEvent("movement chain", 1.5, Rarity[0])
 				break
 			case 6:
-				AddStyleEvent("great movement", 2.5, Rareity[2])
+				AddStyleEvent("great movement", 2.5, Rarity[2])
 				break
 			default:
 				if(movementChain % 3 == 0 && movementChain >= 9)
-				AddStyleEvent("superior movement", 3.5, Rareity[3])
+				AddStyleEvent("superior movement", 3.5, Rarity[3])
 				break
 		}
 
@@ -498,7 +518,7 @@ void function AddStyleFromAirTime(){ //Air time bonus
 	entity p = GetLocalClientPlayer()
 	if(!p.IsOnGround() && !IsSpectating()){ //there should be some sort of check to see if player is in control
 		if(Time() - LastTimeTouchingGround > TimeToBeat){
-			AddStyleEvent("Air Time", 0.6, Rareity[1])
+			AddStyleEvent("Air Time", 0.6, Rarity[1])
 			TimeToBeat += 3
 		}
 	}
