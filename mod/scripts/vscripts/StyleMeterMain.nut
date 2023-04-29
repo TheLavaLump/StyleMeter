@@ -88,10 +88,10 @@ void function KillEvent( ObituaryCallbackParams KillEventParams ){
 
 		// Created by in1tiate, adapted from code by Dinorush
 		// Checks if the dead player was at least 1500 hammer units above solid ground when they died.
-		// Somewhat reliable indicator of a goose (a kill on an ejecting pilot)
-		TraceResults gooseTest = TraceLine (KillEventParams.victim.GetOrigin(), 
-		KillEventParams.victim.GetOrigin() + < 0.0, 0.0, -1500.0>, [KillEventParams.victim],
-		TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
+		// Needs refinement, breaks on some maps and detects gooses when they did not occur
+		//TraceResults gooseTest = TraceLine (KillEventParams.victim.GetOrigin(), 
+		//KillEventParams.victim.GetOrigin() + < 0.0, 0.0, -1500.0>, [KillEventParams.victim],
+		//TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
 
 		if (KillEventParams.victim == GetLocalClientPlayer()) { // Player killed themselves
 			StyleStreak = 0
@@ -128,10 +128,10 @@ void function KillEvent( ObituaryCallbackParams KillEventParams ){
 			Multikill++
 			AddStyleEvent("Pilot Kill", 2.0, Rarity[1] )
 			
-			if(gooseTest.fraction == 1) { // Goose (kill on ejecting pilot)
-				AddStyleEvent( "Goosed", 2.5, Rarity[2] )
-			}
-			else if (MeterDist >= 40.00){ // Longshots
+			//if(gooseTest.fraction == 1) { // Goose (kill on ejecting pilot)
+			//	AddStyleEvent( "Goosed", 2.5, Rarity[2] )
+			//}
+			if (MeterDist >= 40.00){ // Longshots
 				AddStyleEvent( "longshot " + format("%.1f", MeterDist) + "m", 2.0, Rarity[2] ) // Also Created by Mauer
 			}
 			if (KillEventParams.damageSourceId == 126 || KillEventParams.damageSourceId ==  135 || KillEventParams.damageSourceId ==  119 )
