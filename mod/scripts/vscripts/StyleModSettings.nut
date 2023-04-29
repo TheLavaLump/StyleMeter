@@ -1,7 +1,6 @@
 global function StyleModSettingsInit
 
 void function StyleModSettingsInit(){
-	printt("WHJDWJBDJBJHBDBWAJBDWHB")
 	AddModTitle("LavaLump Style Meter")
 	AddModCategory("Style Settings")
 	AddConVarSetting("DecayRate", "Style Decay Rate", "float")
