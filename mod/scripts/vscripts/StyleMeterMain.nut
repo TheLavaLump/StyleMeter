@@ -39,7 +39,7 @@ void function StyleMeterInit()
 
 array < string > SlotStrings = ["", "", "", "", ""]
 array < vector > SlotCols = [<0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>, <0.5, 0.5, 0.5>]
-array < float > StyleRanks = [0.0, 0.01, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
+array < float > StyleRanks = [0.0, 0.01, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0]
 array < string > StyleRankStrings = ["", ""]
 
 float StyleBarWidth = 0.15
@@ -145,7 +145,7 @@ void function KillEvent( ObituaryCallbackParams KillEventParams ){
 				AddStyleEvent( "Execution", 3.0, Rarity[2] ) //Pilot execution
 			}
 			else if (KillEventParams.damageSourceId == 45){
-				AddStyleEvent( "Railcannnoned", 0.2, Rarity[0] ) // Railgun
+				AddStyleEvent( "Railcannoned", 0.2, Rarity[0] ) // Railgun
 			}
 			else if (KillEventParams.damageSourceId == 111){
 				AddStyleEvent( "Bankrupt", 3.0, Rarity[2]) //Pulse blade
@@ -311,8 +311,8 @@ void function UpdateRankUI(){
 		RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
 		RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
 
-		if (StylePoints >= 18){ //Style point cap
-			StylePoints = 18
+		if (StylePoints >= 16){ //Style point cap
+			StylePoints = 16
 		}
 		StyleBarWidth = (StylePointPercenage/13.3333333333) //Percentage to width on the bar
 		RuiTopology_UpdateSphereArcs(PercentageBarTopo,(COCKPIT_RUI_WIDTH * StyleBarWidth),(COCKPIT_RUI_HEIGHT * 0.017), COCKPIT_RUI_SUBDIV) //Update the bar
