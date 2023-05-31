@@ -1,9 +1,21 @@
 Adds an [ULTRAKILL](https://store.steampowered.com/app/1229490/ULTRAKILL/)-like style meter to the Hud of the player.
 Gain 'style' by getting kills and dealing damage, extra style is given by style events that trigger under various conditions.
 
-<hr>
-
 # Updates:
+
+## 1.2.3:
+
+- Lots of code improvements
+- Several new style events for different weapons
+- No-scope event for charge rifle, kraber, longbow, double take and railgun
+- Minor bug fixes
+
+## 1.2.2:
+
+Update created by [in1tiate](https://github.com/in1tiate)
+- Added SS and SSS style ranks
+- Added penalties for self damage and suicide
+- Improvements to code
 
 ## 1.2.1:
 
@@ -21,7 +33,7 @@ Gain 'style' by getting kills and dealing damage, extra style is given by style 
 
 ## 1.1.0:
 
-- Added an event for killing non-player enimies.
+- Added an event for killing non-player enemies.
 - Minor code improvements
 - Added events for movement, speed and Air time, courtesy of [Khalmee](https://northstar.thunderstore.io/package/Khalmee/)
 
