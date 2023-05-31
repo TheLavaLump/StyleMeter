@@ -3,7 +3,7 @@
 	"Description": "Adds an Ultrakill-like style meter to the Hud",
 	"LoadPriority": 2,
 	"RequiredOnClient": false,
-	"Version": "1.2.1",
+	"Version": "1.2.6",
 
 	"Scripts": [
 		{
