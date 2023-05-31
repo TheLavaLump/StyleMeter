@@ -1,15 +1,8 @@
 global function StyleMeterInit
-global function AddStyleEvent
 
 
-var StyleRankRui1 = null
-var StyleRankRui2 = null
-
-var StyleEventSlot1 = null
-var StyleEventSlot2 = null
-var StyleEventSlot3 = null
-var StyleEventSlot4 = null
-var StyleEventSlot5 = null
+array < var > StyleRankRuis = [null, null]
+array < var > StyleEventSlots = [null, null, null, null, null]
 var PercentageBarTopo = null
 var percentageRui = null
 
@@ -92,7 +85,9 @@ void function KillEvent( ObituaryCallbackParams KillEventParams ){
 		//TraceResults gooseTest = TraceLine (KillEventParams.victim.GetOrigin(), 
 		//KillEventParams.victim.GetOrigin() + < 0.0, 0.0, -1500.0>, [KillEventParams.victim],
 		//TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-
+		if(KillEventParams.victim == GetLocalClientPlayer() && KillEventParams.damageSourceId == 179){
+			AddStyleEvent( "literally 1984", 0.0, Rarity[1]) //If you get killed by mind_crime
+		}
 		if (KillEventParams.victim == GetLocalClientPlayer()) { // Player killed themselves
 			StyleStreak = 0
 			AddStyleEvent( "Suicide", 0.0, Rarity[1] )
@@ -112,19 +107,20 @@ void function KillEvent( ObituaryCallbackParams KillEventParams ){
 		if (Multikill > 1){
 			AddStyleEvent( "Multikill X" + Multikill, 1.0, Rarity[2] ) // Multikills
 		}
-		if (StyleStreak == 3 ){
-			AddStyleEvent( "Streak", 1.0, Rarity[1] ) //Killstreaks
+		switch(StyleStreak){
+			case 3:
+				AddStyleEvent( "Streak", 1.0, Rarity[1] )
+					break
+			case 6:
+				AddStyleEvent( "Great Streak", 1.0, Rarity[2] )
+					break
+			case 10:
+				AddStyleEvent( "Untouchable", 1.0, Rarity[3] )
+					break
+			default:
+				break
 		}
-		else if (StyleStreak == 6){
-			AddStyleEvent( "Great Streak", 1.0, Rarity[2] )
-		}
-		else if (StyleStreak == 10){
-			AddStyleEvent( "Untouchable", 1.0, Rarity[3] )
-		}
-		if(KillEventParams.damageSourceId == 110 || KillEventParams.damageSourceId == 75 || KillEventParams.damageSourceId == 237 || KillEventParams.damageSourceId == 40 || KillEventParams.damageSourceId == 57 || KillEventParams.damageSourceId == 81 ){
-				AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Firestar + all of scorches abilities (hopefully)
-			}
-		else if(KillEventParams.victim.IsPlayer && !KillEventParams.victimIsOwnedTitan){
+		if(KillEventParams.victim.IsPlayer && !KillEventParams.victimIsOwnedTitan){
 			Multikill++
 			AddStyleEvent("Pilot Kill", 2.0, Rarity[1] )
 			
@@ -134,27 +130,77 @@ void function KillEvent( ObituaryCallbackParams KillEventParams ){
 			if (MeterDist >= 40.00){ // Longshots
 				AddStyleEvent( "longshot " + format("%.1f", MeterDist) + "m", 2.0, Rarity[2] ) // Also Created by Mauer
 			}
-			if (KillEventParams.damageSourceId == 126 || KillEventParams.damageSourceId ==  135 || KillEventParams.damageSourceId ==  119 )
-			{
-				AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) // Cold war, Epg, Charge rifle
+			if(KillEventParams.damageSourceId == 119 && GetLocalClientPlayer().GetZoomFrac() < 0.5|| KillEventParams.damageSourceId == 103 && GetLocalClientPlayer().GetZoomFrac() < 0.5|| KillEventParams.damageSourceId == 97 && GetLocalClientPlayer().GetZoomFrac() < 0.5|| KillEventParams.damageSourceId == 130 && GetLocalClientPlayer().GetZoomFrac() < 0.5|| KillEventParams.damageSourceId == 45 && GetLocalClientPlayer().GetZoomFrac() < 0.5){
+				AddStyleEvent( "No-Scope", 2.0, Rarity[2]) // No-Sope for the dmr, kraber, double take, charge rifle and railgun
 			}
-			else if (KillEventParams.damageSourceId == 140){
-				AddStyleEvent( "Disrespect", 0.2, Rarity[0] ) // Pilot melee
-			}
-			else if (KillEventParams.damageSourceId == 186){
-				AddStyleEvent( "Execution", 3.0, Rarity[2] ) //Pilot execution
-			}
-			else if (KillEventParams.damageSourceId == 45){
-				AddStyleEvent( "Railcannoned", 0.2, Rarity[0] ) // Railgun
-			}
-			else if (KillEventParams.damageSourceId == 111){
-				AddStyleEvent( "Bankrupt", 3.0, Rarity[2]) //Pulse blade
-			}
-			else if (KillEventParams.damageSourceId == 85){
-				AddStyleEvent( "Why are you even using this", 0.1, Rarity[0]) //Electric smoke nades
-			}
-			else if (KillEventParams.damageSourceId == 151){
-				AddStyleEvent( "sliced", 0.2, Rarity[0] ) //Ronin melee
+			switch(KillEventParams.damageSourceId){
+				case 110:
+					AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Firestar
+						break
+				case 237:
+					AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Thermal shield
+						break
+				case 75:
+					AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Flame core
+						break
+				case 40:
+					AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Thermite launcher
+						break
+				case 57:
+					AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Fire wall
+						break	
+				case 238:
+					AddStyleEvent( "Incineration", 0.5, Rarity[0] ) //Gas trap probably (Its so hard to get kills with that I cant verify)
+						break
+				case 126:
+					AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) // Cold war
+						break
+				case 135:
+					AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) //Epg
+						break
+				case 77:
+					AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) //Laser core
+						break	
+				case 65:
+					AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) //Laser shot
+						break
+				case 151:
+					AddStyleEvent( "Sliced", 0.5, Rarity[0] ) // Ronin sword
+						break
+				case 152:
+					AddStyleEvent( "Sliced", 0.5, Rarity[0] ) // Ronin sword (Again)
+						break
+				case 119:
+					AddStyleEvent( "Obliterated", 0.2, Rarity[0] ) //Charge Rifle
+						break
+				case 140:
+					AddStyleEvent( "Disrespect", 0.2, Rarity[0] ) // Pilot melee
+						break
+				case 186:
+					AddStyleEvent( "Execution", 3.0, Rarity[2] ) //Pilot execution
+						break
+				case 45:
+					AddStyleEvent( "Railcannoned", 0.2, Rarity[0] ) // Railgun
+						break
+				case 111:
+					AddStyleEvent( "Bankrupt", 3.0, Rarity[2]) //Pulse blade
+						break
+				case 85:
+					AddStyleEvent( "Why are you even using this", 0.1, Rarity[0]) //Electric smoke nades
+						break
+				case 47:
+					AddStyleEvent( "Reversal", 2.0, Rarity[2]) // Vortex sheild
+						break
+				case 48:
+					AddStyleEvent( "Reversal", 2.0, Rarity[2]) // Vortex sheild (again)
+						break
+				case 64:
+					AddStyleEvent( "Baited", 1.5, Rarity[2]) // Laser tripwire
+						break
+				case 162:
+					AddStyleEvent( "Automated", 1.0, Rarity[2]) // Pilot sentry 
+				default:
+					break
 			}
 		}
 		if (KillEventParams.damageSourceId == 44){
@@ -214,6 +260,7 @@ void function AddStyleEvent( string name, float amount, vector rarity ){
 
 void function UpdateRankUI(){
 	while(true){
+	
 		TimeNow = Time()
 		StyleScale2 = 50.0
 		//Khalmee's
@@ -279,37 +326,37 @@ void function UpdateRankUI(){
 			StylePos2 = StylePos1 + <0.002, 0.002, 0>
 			}
 		//Refresh the Rui of the style meter
-		RuiSetFloat2(StyleEventSlot1, "msgPos", StylePos1 + <0, 0.10, 0>)
-		RuiSetFloat(StyleEventSlot1, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot1, "msgColor", SlotCols[0])
-		RuiSetString(StyleEventSlot1, "msgText", SlotStrings[0])
+		RuiSetFloat2(StyleEventSlots[0], "msgPos", StylePos1 + <0, 0.10, 0>)
+		RuiSetFloat(StyleEventSlots[0], "msgAlpha", StyleEventAlpha)
+		RuiSetFloat3(StyleEventSlots[0], "msgColor", SlotCols[0])
+		RuiSetString(StyleEventSlots[0], "msgText", SlotStrings[0])
 
-		RuiSetFloat2(StyleEventSlot2, "msgPos", StylePos1 + <0, 0.13, 0>)
-		RuiSetFloat(StyleEventSlot2, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot2, "msgColor", SlotCols[1])
-		RuiSetString(StyleEventSlot2, "msgText", SlotStrings[1])
+		RuiSetFloat2(StyleEventSlots[1], "msgPos", StylePos1 + <0, 0.13, 0>)
+		RuiSetFloat(StyleEventSlots[1], "msgAlpha", StyleEventAlpha)
+		RuiSetFloat3(StyleEventSlots[1], "msgColor", SlotCols[1])
+		RuiSetString(StyleEventSlots[1], "msgText", SlotStrings[1])
 
-		RuiSetFloat2(StyleEventSlot3, "msgPos", StylePos1 + <0, 0.16, 0>)
-		RuiSetFloat(StyleEventSlot3, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot3, "msgColor", SlotCols[2])
-		RuiSetString(StyleEventSlot3, "msgText", SlotStrings[2])
+		RuiSetFloat2(StyleEventSlots[2], "msgPos", StylePos1 + <0, 0.16, 0>)
+		RuiSetFloat(StyleEventSlots[2], "msgAlpha", StyleEventAlpha)
+		RuiSetFloat3(StyleEventSlots[2], "msgColor", SlotCols[2])
+		RuiSetString(StyleEventSlots[2], "msgText", SlotStrings[2])
 
-		RuiSetFloat2(StyleEventSlot4, "msgPos", StylePos1 + <0, 0.19, 0>)
-		RuiSetFloat(StyleEventSlot4, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot4, "msgColor", SlotCols[3])
-		RuiSetString(StyleEventSlot4, "msgText", SlotStrings[3])
+		RuiSetFloat2(StyleEventSlots[3], "msgPos", StylePos1 + <0, 0.19, 0>)
+		RuiSetFloat(StyleEventSlots[3], "msgAlpha", StyleEventAlpha)
+		RuiSetFloat3(StyleEventSlots[3], "msgColor", SlotCols[3])
+		RuiSetString(StyleEventSlots[3], "msgText", SlotStrings[3])
 
-		RuiSetFloat2(StyleEventSlot5, "msgPos", StylePos1 + <0, 0.22, 0>)
-		RuiSetFloat(StyleEventSlot5, "msgAlpha", StyleEventAlpha)
-		RuiSetFloat3(StyleEventSlot5, "msgColor", SlotCols[4])
-		RuiSetString(StyleEventSlot5, "msgText", SlotStrings[4])
+		RuiSetFloat2(StyleEventSlots[4], "msgPos", StylePos1 + <0, 0.22, 0>)
+		RuiSetFloat(StyleEventSlots[4], "msgAlpha", StyleEventAlpha)
+		RuiSetFloat3(StyleEventSlots[4], "msgColor", SlotCols[4])
+		RuiSetString(StyleEventSlots[4], "msgText", SlotStrings[4])
 
-		RuiSetFloat2(StyleRankRui2, "msgPos", StylePos2)
-		RuiSetFloat(StyleRankRui2, "msgFontSize", StyleScale2)
-		RuiSetFloat3(StyleRankRui2, "msgColor", StyleCol2)
-		RuiSetFloat3(StyleRankRui1, "msgColor", StyleCol1)
-		RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
-		RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
+		RuiSetFloat2(StyleRankRuis[1], "msgPos", StylePos2)
+		RuiSetFloat(StyleRankRuis[1], "msgFontSize", StyleScale2)
+		RuiSetFloat3(StyleRankRuis[1], "msgColor", StyleCol2)
+		RuiSetFloat3(StyleRankRuis[0], "msgColor", StyleCol1)
+		RuiSetString(StyleRankRuis[1], "msgText", StyleRankStrings[1])
+		RuiSetString(StyleRankRuis[0], "msgText", StyleRankStrings[0])
 
 		if (StylePoints >= 16){ //Style point cap
 			StylePoints = 16
@@ -350,91 +397,91 @@ void function UpdateRankUI(){
 			StylePoints = 0
 		}
 	}
-	RuiDestroy(StyleRankRui2)
-	RuiDestroy(StyleRankRui1)
-	RuiDestroy(StyleEventSlot1)
-	RuiDestroy(StyleEventSlot2)
-	RuiDestroy(StyleEventSlot3)
-	RuiDestroy(StyleEventSlot4)
-	RuiDestroy(StyleEventSlot5)
+	RuiDestroy(StyleRankRuis[1])
+	RuiDestroy(StyleRankRuis[0])
+	RuiDestroy(StyleEventSlots[0])
+	RuiDestroy(StyleEventSlots[1])
+	RuiDestroy(StyleEventSlots[2])
+	RuiDestroy(StyleEventSlots[3])
+	RuiDestroy(StyleEventSlots[4])
 	RuiDestroy(percentageRui)
 }
 
 
-void function StyleRuiSetup(){ // Putting these here to make me seem more orgainsed than I am :)
+void function StyleRuiSetup(){
 	percentageRui = RuiCreate( $"ui/basic_image.rpak", PercentageBarTopo, RUI_DRAW_COCKPIT, 0)
-	StyleRankRui2 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	StyleRankRui1 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	StyleEventSlot1 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	StyleEventSlot2 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	StyleEventSlot3 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	StyleEventSlot4 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
-	StyleEventSlot5 = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleRankRuis[1] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleRankRuis[0] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleEventSlots[0] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleEventSlots[1] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleEventSlots[2] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleEventSlots[3] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
+	StyleEventSlots[4] = RuiCreate($"ui/cockpit_console_text_top_left.rpak", clGlobal.topoCockpitHudPermanent, RUI_DRAW_COCKPIT, 0)
 
 	//Style rank Segment 1
-	RuiSetInt(StyleRankRui1, "maxLines", 1)
-	RuiSetInt(StyleRankRui1, "lineNum", 1)
-	RuiSetFloat2(StyleRankRui1, "msgPos", StylePos1)
-	RuiSetFloat(StyleRankRui1, "msgFontSize", 70.0)
-	RuiSetFloat(StyleRankRui1, "msgAlpha", 1.0)
-	RuiSetFloat(StyleRankRui1, "thicken", 0.0)
-	RuiSetFloat3(StyleRankRui1, "msgColor", StyleCol1)
-	RuiSetString(StyleRankRui1, "msgText", StyleRankStrings[0])
+	RuiSetInt(StyleRankRuis[0], "maxLines", 1)
+	RuiSetInt(StyleRankRuis[0], "lineNum", 1)
+	RuiSetFloat2(StyleRankRuis[0], "msgPos", StylePos1)
+	RuiSetFloat(StyleRankRuis[0], "msgFontSize", 70.0)
+	RuiSetFloat(StyleRankRuis[0], "msgAlpha", 1.0)
+	RuiSetFloat(StyleRankRuis[0], "thicken", 0.0)
+	RuiSetFloat3(StyleRankRuis[0], "msgColor", StyleCol1)
+	RuiSetString(StyleRankRuis[0], "msgText", StyleRankStrings[0])
 	//Style rank Segment 2
-	RuiSetInt(StyleRankRui2, "maxLines", 1)
-	RuiSetInt(StyleRankRui2, "lineNum", 1)
-	RuiSetFloat2(StyleRankRui2, "msgPos", StylePos2)
-	RuiSetFloat(StyleRankRui2, "msgFontSize", StyleScale2)
-	RuiSetFloat(StyleRankRui2, "msgAlpha", 1.0)
-	RuiSetFloat(StyleRankRui2, "thicken", 0.0)
-	RuiSetFloat3(StyleRankRui2, "msgColor", StyleCol2)
-	RuiSetString(StyleRankRui2, "msgText", StyleRankStrings[1])
+	RuiSetInt(StyleRankRuis[1], "maxLines", 1)
+	RuiSetInt(StyleRankRuis[1], "lineNum", 1)
+	RuiSetFloat2(StyleRankRuis[1], "msgPos", StylePos2)
+	RuiSetFloat(StyleRankRuis[1], "msgFontSize", StyleScale2)
+	RuiSetFloat(StyleRankRuis[1], "msgAlpha", 1.0)
+	RuiSetFloat(StyleRankRuis[1], "thicken", 0.0)
+	RuiSetFloat3(StyleRankRuis[1], "msgColor", StyleCol2)
+	RuiSetString(StyleRankRuis[1], "msgText", StyleRankStrings[1])
 
 	//Slot 1
-	RuiSetInt(StyleEventSlot1, "maxLines", 1)
-	RuiSetInt(StyleEventSlot1, "lineNum", 1)
-	RuiSetFloat2(StyleEventSlot1, "msgPos", <StylePosX1, StylePosY1 + 1, 0>)
-	RuiSetFloat(StyleEventSlot1, "msgFontSize", 50.0)
-	RuiSetFloat(StyleEventSlot1, "msgAlpha", StyleEventAlpha)
-	RuiSetFloat(StyleEventSlot1, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot1, "msgColor", SlotCols[0])
-	RuiSetString(StyleEventSlot1, "msgText", SlotStrings[0])
+	RuiSetInt(StyleEventSlots[0], "maxLines", 1)
+	RuiSetInt(StyleEventSlots[0], "lineNum", 1)
+	RuiSetFloat2(StyleEventSlots[0], "msgPos", <StylePosX1, StylePosY1 + 1, 0>)
+	RuiSetFloat(StyleEventSlots[0], "msgFontSize", 50.0)
+	RuiSetFloat(StyleEventSlots[0], "msgAlpha", StyleEventAlpha)
+	RuiSetFloat(StyleEventSlots[0], "thicken", 0.0)
+	RuiSetFloat3(StyleEventSlots[0], "msgColor", SlotCols[0])
+	RuiSetString(StyleEventSlots[0], "msgText", SlotStrings[0])
 	//Slot 2
-	RuiSetInt(StyleEventSlot2, "maxLines", 1)
-	RuiSetInt(StyleEventSlot2, "lineNum", 1)
-	RuiSetFloat2(StyleEventSlot2, "msgPos", <StylePosX1, StylePosY1, 0>)
-	RuiSetFloat(StyleEventSlot2, "msgFontSize", 50.0)
-	RuiSetFloat(StyleEventSlot2, "msgAlpha", StyleEventAlpha)
-	RuiSetFloat(StyleEventSlot2, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot2, "msgColor", SlotCols[1])
-	RuiSetString(StyleEventSlot2, "msgText", SlotStrings[1])
+	RuiSetInt(StyleEventSlots[1], "maxLines", 1)
+	RuiSetInt(StyleEventSlots[1], "lineNum", 1)
+	RuiSetFloat2(StyleEventSlots[1], "msgPos", <StylePosX1, StylePosY1, 0>)
+	RuiSetFloat(StyleEventSlots[1], "msgFontSize", 50.0)
+	RuiSetFloat(StyleEventSlots[1], "msgAlpha", StyleEventAlpha)
+	RuiSetFloat(StyleEventSlots[1], "thicken", 0.0)
+	RuiSetFloat3(StyleEventSlots[1], "msgColor", SlotCols[1])
+	RuiSetString(StyleEventSlots[1], "msgText", SlotStrings[1])
 	//Slot 3
-	RuiSetInt(StyleEventSlot3, "maxLines", 1)
-	RuiSetInt(StyleEventSlot3, "lineNum", 1)
-	RuiSetFloat2(StyleEventSlot3, "msgPos", <StylePosX1, StylePosY1, 0>)
-	RuiSetFloat(StyleEventSlot3, "msgFontSize", 50.0)
-	RuiSetFloat(StyleEventSlot3, "msgAlpha", StyleEventAlpha)
-	RuiSetFloat(StyleEventSlot3, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot3, "msgColor", SlotCols[2])
-	RuiSetString(StyleEventSlot3, "msgText", SlotStrings[2])
+	RuiSetInt(StyleEventSlots[2], "maxLines", 1)
+	RuiSetInt(StyleEventSlots[2], "lineNum", 1)
+	RuiSetFloat2(StyleEventSlots[2], "msgPos", <StylePosX1, StylePosY1, 0>)
+	RuiSetFloat(StyleEventSlots[2], "msgFontSize", 50.0)
+	RuiSetFloat(StyleEventSlots[2], "msgAlpha", StyleEventAlpha)
+	RuiSetFloat(StyleEventSlots[2], "thicken", 0.0)
+	RuiSetFloat3(StyleEventSlots[2], "msgColor", SlotCols[2])
+	RuiSetString(StyleEventSlots[2], "msgText", SlotStrings[2])
 	//Slot 4
-	RuiSetInt(StyleEventSlot4, "maxLines", 1)
-	RuiSetInt(StyleEventSlot4, "lineNum", 1)
-	RuiSetFloat2(StyleEventSlot4, "msgPos", <StylePosX1, StylePosY1, 0>)
-	RuiSetFloat(StyleEventSlot4, "msgFontSize", 50.0)
-	RuiSetFloat(StyleEventSlot4, "msgAlpha", StyleEventAlpha)
-	RuiSetFloat(StyleEventSlot4, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot4, "msgColor", SlotCols[3])
-	RuiSetString(StyleEventSlot4, "msgText", SlotStrings[3])
+	RuiSetInt(StyleEventSlots[3], "maxLines", 1)
+	RuiSetInt(StyleEventSlots[3], "lineNum", 1)
+	RuiSetFloat2(StyleEventSlots[3], "msgPos", <StylePosX1, StylePosY1, 0>)
+	RuiSetFloat(StyleEventSlots[3], "msgFontSize", 50.0)
+	RuiSetFloat(StyleEventSlots[3], "msgAlpha", StyleEventAlpha)
+	RuiSetFloat(StyleEventSlots[3], "thicken", 0.0)
+	RuiSetFloat3(StyleEventSlots[3], "msgColor", SlotCols[3])
+	RuiSetString(StyleEventSlots[3], "msgText", SlotStrings[3])
 	//Slot 5
-	RuiSetInt(StyleEventSlot5, "maxLines", 1)
-	RuiSetInt(StyleEventSlot5, "lineNum", 1)
-	RuiSetFloat2(StyleEventSlot5, "msgPos", <StylePosX1, StylePosY1, 0>)
-	RuiSetFloat(StyleEventSlot5, "msgFontSize", 50.0)
-	RuiSetFloat(StyleEventSlot5, "msgAlpha", StyleEventAlpha)
-	RuiSetFloat(StyleEventSlot5, "thicken", 0.0)
-	RuiSetFloat3(StyleEventSlot5, "msgColor", SlotCols[4])
-	RuiSetString(StyleEventSlot5, "msgText", SlotStrings[4])
+	RuiSetInt(StyleEventSlots[4], "maxLines", 1)
+	RuiSetInt(StyleEventSlots[4], "lineNum", 1)
+	RuiSetFloat2(StyleEventSlots[4], "msgPos", <StylePosX1, StylePosY1, 0>)
+	RuiSetFloat(StyleEventSlots[4], "msgFontSize", 50.0)
+	RuiSetFloat(StyleEventSlots[4], "msgAlpha", StyleEventAlpha)
+	RuiSetFloat(StyleEventSlots[4], "thicken", 0.0)
+	RuiSetFloat3(StyleEventSlots[4], "msgColor", SlotCols[4])
+	RuiSetString(StyleEventSlots[4], "msgText", SlotStrings[4])
 }
 
 //Khalmee's stuff
