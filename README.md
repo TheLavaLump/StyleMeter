@@ -3,6 +3,11 @@ Gain 'style' by getting kills and dealing damage, extra style is given by style 
 
 # Updates:
 
+## 1.2.4:
+
+- Mod now uses the version of ModSettings that comes with Northstar V1.15.2 or higher
+- Any older versions of this mod must now use Northstar v1.15.1 or lower
+
 ## 1.2.3:
 
 - Lots of code improvements
